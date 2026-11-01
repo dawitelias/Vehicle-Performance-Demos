@@ -31,7 +31,7 @@ npm run build      # typecheck + production build to dist/
 
 ## The 3D model
 
-`public/models/z.glb` is the 2020 Nissan Z Proto concept from Sketchfab, run through `gltf-transform optimize --compress meshopt` (9.9 MB to 2.2 MB, 188k triangles). `src/ui/ZScene.tsx` replaces its materials with a near-black body carrying a yellow fresnel rim, draws crease edges as lines pushed above white so bloom catches them, splits the merged wheel mesh into four by position so each spins on its own hub and slides out for the exploded hero, and runs bloom, chromatic aberration, film grain and a vignette as post-processing passes. `src/ui/zSprite.ts` renders the same model side-on once per page load for the race diagrams. If WebGL is missing the hand-drawn contour Z in `ZContour.tsx` takes over.
+`public/models/z.glb` is the [2020 Nissan Z Proto concept](https://sketchfab.com/3d-models/2020-nissan-z-proto-concept-03606ad387374824af0df58b6ca5f574) from Sketchfab, used under the licence stated on that page, run through `gltf-transform optimize --compress meshopt` (9.9 MB to 2.2 MB, 188k triangles). `src/ui/ZScene.tsx` replaces its materials with a near-black body carrying a yellow fresnel rim, draws crease edges as lines pushed above white so bloom catches them, splits the merged wheel mesh into four by position so each spins on its own hub and slides out for the exploded hero, and runs bloom, chromatic aberration, film grain and a vignette as post-processing passes. `src/ui/zSprite.ts` renders the same model side-on once per page load for the race diagrams. If WebGL is missing the hand-drawn contour Z in `ZContour.tsx` takes over.
 
 ## Deploying
 
