@@ -14,3 +14,6 @@
 .hub-item-status { grid-area: status; }
 .hub-item-arrow { grid-area: arrow; font-size: 40px; color: var(--fg-2); transition: transform 160ms ease, color 160ms ease; }
 .hub-foot { max-width: 56ch; }
+
+.hub-scene { width: min(1180px, 100%); margin: 0 auto; aspect-ratio: 16 / 8; }
+@media (max-width: 700px) { .hub-scene { aspect-ratio: 4 / 3; } }

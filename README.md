@@ -29,9 +29,9 @@ npm run build      # typecheck + production build to dist/
 | `src/pages/` | Hub and demo pages. |
 | `public/fonts/` | Self-hosted Archivo variable font. |
 
-## Adding a 3D model
+## The 3D model
 
-Drop a glTF binary at `public/models/z.glb` and the hero switches from the drawn Z to the model, rendered as glowing edges so it matches the line work. Keep it under about 5 MB and 100k triangles for phones; `npx @gltf-transform/cli optimize in.glb out.glb --compress meshopt` helps. The only free, licensed model of the new Z found so far is the CC-BY "2023 Nissan 400Z" on Sketchfab.
+`public/models/z.glb` is the 2020 Nissan Z Proto concept from Sketchfab, run through `gltf-transform optimize --compress meshopt` (9.9 MB to 2.2 MB, 188k triangles). `src/ui/ZScene.tsx` replaces its materials with a near-black body carrying a yellow fresnel rim, draws crease edges as lines pushed above white so bloom catches them, splits the merged wheel mesh into four by position so each spins on its own hub and slides out for the exploded hero, and runs bloom, chromatic aberration, film grain and a vignette as post-processing passes. `src/ui/zSprite.ts` renders the same model side-on once per page load for the race diagrams. If WebGL is missing the hand-drawn contour Z in `ZContour.tsx` takes over.
 
 ## Deploying
 

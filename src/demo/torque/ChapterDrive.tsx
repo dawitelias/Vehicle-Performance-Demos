@@ -6,6 +6,7 @@ import { optimalShiftPoints, overallRatios } from '../../sim/drivetrain'
 import { createEngineSound, type EngineSound } from '../../audio/engineSound'
 import { createHaptics } from '../../haptics/haptics'
 import { ZContour } from '../../ui/ZContour'
+import { ZScene, hasWebGL } from '../../ui/ZScene'
 import { RingTach } from '../../ui/RingTach'
 import { CurveChart } from '../../ui/CurveChart'
 import { ControlBar } from '../../ui/ControlBar'
@@ -17,6 +18,7 @@ export function ChapterDrive() {
   const [curveMode, setCurveMode] = useState<CurveMode>('rated')
   const [autoShift, setAutoShift] = useState(false)
   const [soundOn, setSoundOn] = useState(false)
+  const [webgl] = useState(() => hasWebGL())
   const haptics = useMemo(() => createHaptics(), [])
   const soundRef = useRef<EngineSound | null>(null)
 
@@ -69,7 +71,7 @@ export function ChapterDrive() {
 
       <div className="wrap drive-stage">
         <div className="drive-car">
-          <ZContour wheelAngle={s.x / 0.327} className="drive-car-svg" />
+          {webgl ? <ZScene view="side" autoRotate={false} wheelAngle={s.x / 0.327} className="drive-scene" fallback={<ZContour wheelAngle={s.x / 0.327} className="drive-car-svg" />} /> : <ZContour wheelAngle={s.x / 0.327} className="drive-car-svg" />}
         </div>
         <div className="drive-instruments">
           <RingTach rpm={s.rpm} redlineRpm={Z_ENGINE.redlineRpm} onLimiter={s.onLimiter} className="drive-ring" />

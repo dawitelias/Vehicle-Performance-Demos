@@ -165,3 +165,17 @@ svg { display: block; }
 
 /* Visually hidden */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 3D scenes */
+.zscene { position: relative; width: 100%; aspect-ratio: 16 / 9; max-width: 100%; }
+.zscene canvas { display: block; }
+.zscene.is-off canvas { visibility: hidden; }
+@media (max-width: 700px) { .zscene { aspect-ratio: 4 / 3; } }
+.zlabel {
+  display: inline-block; white-space: nowrap; font-size: 12px; letter-spacing: 0.04em; padding: 3px 9px; position: relative;
+  background:
+    linear-gradient(currentColor, currentColor) top left / 6px 1px no-repeat, linear-gradient(currentColor, currentColor) top left / 1px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) top right / 6px 1px no-repeat, linear-gradient(currentColor, currentColor) top right / 1px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) bottom left / 6px 1px no-repeat, linear-gradient(currentColor, currentColor) bottom left / 1px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) bottom right / 6px 1px no-repeat, linear-gradient(currentColor, currentColor) bottom right / 1px 6px no-repeat;
+}

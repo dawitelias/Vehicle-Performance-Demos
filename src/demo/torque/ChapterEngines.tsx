@@ -5,6 +5,7 @@ import { nissanZ, z370, ghostHighRevRegeared, ghostDiesel, ev, type Vehicle } fr
 import { simulate, timeToMph } from '../../sim/longitudinal'
 import { ControlBar } from '../../ui/ControlBar'
 import { ZGlyph } from '../../ui/ZGlyph'
+import { useZSprite } from '../../hooks/useZSprite'
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
 const FINISH = 130
@@ -39,9 +40,10 @@ export function ChapterEngines() {
     [],
   )
   const [ref, narrow] = useNarrow<SVGSVGElement>(560)
+  const sprite = useZSprite()
   const W = narrow ? 520 : 1000
-  const L = narrow ? 16 : 40
-  const trackW = W - 2 * L
+  const L = narrow ? 110 : 180 // room for the car body behind the start line
+  const trackW = W - L - (narrow ? 16 : 40)
   const laneH = narrow ? 64 : 84
   const H = 30 + laneH * ENTRIES.length + 30
   const leaderX = Math.max(...race.racers.map((r) => r.state.x))
@@ -95,12 +97,12 @@ export function ChapterEngines() {
             const x = xOf(Math.max(s.x, windowStart - 20))
             return (
               <g key={r.id}>
-                <line x1={L} x2={L + trackW} y1={ground} y2={ground} stroke="#2a2a2e" />
-                <ZGlyph x={x} y={ground - 318 * glyphScale} scale={glyphScale} flip wheelAngle={s.x / 0.327} color={e.color} strokeWidth={1} opacity={s.x < windowStart - 20 ? 0.35 : 1} />
-                <text x={L} y={y + 4} fill={e.color} fontSize={narrow ? 13 : 15} fontWeight={700}>
+                <line x1={narrow ? 16 : 40} x2={L + trackW} y1={ground} y2={ground} stroke="#2a2a2e" />
+                <ZGlyph x={x} y={ground - 318 * glyphScale} scale={glyphScale} flip wheelAngle={s.x / 0.327} color={e.color} strokeWidth={1} opacity={s.x < windowStart - 20 ? 0.35 : i === 0 ? 1 : 0.7} href={sprite} />
+                <text x={narrow ? 16 : 40} y={y + 4} fill={e.color} fontSize={narrow ? 13 : 15} fontWeight={700}>
                   {e.label}
                 </text>
-                <text x={L + (narrow ? 90 : 130)} y={y + 4} fill="#a7a39a" fontSize={narrow ? 12 : 14}>
+                <text x={(narrow ? 16 : 40) + (narrow ? 90 : 130)} y={y + 4} fill="#a7a39a" fontSize={narrow ? 12 : 14}>
                   {fmt(r.mph)} mph{e.vehicle.powertrain.kind === 'ice' ? `, ${ordinalShort(s.gear)}, ${fmt(s.rpm)} rpm` : ''}
                   {r.finishedAt !== null ? `, 130 at ${r.finishedAt.toFixed(1)} s` : ''}
                 </text>

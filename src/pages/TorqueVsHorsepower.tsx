@@ -22,7 +22,7 @@ export function TorqueVsHorsepower() {
       <ChapterDrive />
       <footer className="wrap demo-foot">
         <hr className="rule" />
-        <p className="small">Every number here comes from one model: Nissan's published curve, the six-speed's ratios, a 275/35R19 rear tyre, 3,536 lb plus a driver, and a drag coefficient of 0.31. The simulated Z does 0 to 60 in 4.8 seconds and the quarter mile in 13.0 at 111 mph; Car and Driver measured 4.5 and 13.0 at 111.</p>
+        <p className="small">Every number here comes from one model: Nissan's published curve, the six-speed's ratios, a 275/35R19 rear tyre, 3,536 lb plus a driver, and a drag coefficient of 0.31. The simulated Z does 0 to 60 in 4.8 seconds and the quarter mile in 13.0 at 111 mph; Car and Driver measured 4.5 and 13.0 at 111. The 3D model is the 2020 Nissan Z Proto concept from Sketchfab.</p>
       </footer>
     </main>
   )

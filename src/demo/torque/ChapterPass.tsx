@@ -7,6 +7,7 @@ import { rollingAccel } from '../../sim/longitudinal'
 import { mpsFromMph } from '../../sim/units'
 import { ControlBar } from '../../ui/ControlBar'
 import { ZGlyph } from '../../ui/ZGlyph'
+import { useZSprite } from '../../hooks/useZSprite'
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
 const FROM = 50
@@ -30,13 +31,14 @@ export function ChapterPass() {
   const hpRatio = fullThrottlePowerHp(nissanZ, rpmLowAt50) / fullThrottlePowerHp(nissanZ, rpmSixAt50)
   const pushRatio = (fullThrottleTorqueLbft(nissanZ, rpmLowAt50) * ratios[gearB - 1]) / (fullThrottleTorqueLbft(nissanZ, rpmSixAt50) * ratios[5])
   const [trackRef, narrow] = useNarrow<SVGSVGElement>(560)
+  const sprite = useZSprite()
 
   // Track: both cars start at x = 0, noses on the line. Scale so the slow car's whole run fits.
   const maxX = Math.max(240, batch.six.distanceM * 1.08)
   const W = narrow ? 520 : 1000
   const H = narrow ? 260 : 300
-  const L = narrow ? 16 : 40
-  const trackW = W - 2 * L
+  const L = narrow ? 130 : 220 // room for the car body behind the start line
+  const trackW = W - L - (narrow ? 16 : 40)
   const xOf = (m: number) => L + (m / maxX) * trackW
   const wheelAngle = (s: { x: number }) => s.x / 0.327
   const glyphScale = narrow ? 0.13 : 0.19
@@ -74,12 +76,12 @@ export function ChapterPass() {
             const ground = y + laneH - 14
             return (
               <g key={r.id}>
-                <line x1={L} x2={L + trackW} y1={ground} y2={ground} stroke="#2a2a2e" />
-                <ZGlyph x={xOf(r.state.x)} y={ground - 318 * glyphScale} scale={glyphScale} flip wheelAngle={wheelAngle(r.state)} color={on ? '#f2c230' : '#ede9e0'} strokeWidth={1.1} />
-                <text x={L} y={y + 6} fill={on ? '#f2c230' : '#ede9e0'} fontSize={16} fontWeight={700}>
+                <line x1={narrow ? 16 : 40} x2={L + trackW} y1={ground} y2={ground} stroke="#2a2a2e" />
+                <ZGlyph x={xOf(r.state.x)} y={ground - 318 * glyphScale} scale={glyphScale} flip wheelAngle={wheelAngle(r.state)} color={on ? '#f2c230' : '#ede9e0'} strokeWidth={1.1} href={sprite} opacity={on ? 1 : 0.7} />
+                <text x={narrow ? 16 : 40} y={y + 6} fill={on ? '#f2c230' : '#ede9e0'} fontSize={16} fontWeight={700}>
                   {r.label}
                 </text>
-                <text x={L + 70} y={y + 6} fill="#a7a39a" fontSize={14}>
+                <text x={(narrow ? 16 : 40) + 70} y={y + 6} fill="#a7a39a" fontSize={14}>
                   {fmt(r.mph)} mph, {fmt(r.state.rpm)} rpm{r.finishedAt !== null ? `, 80 at ${r.finishedAt.toFixed(1)} s` : ''}
                 </text>
               </g>

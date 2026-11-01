@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '../app/router'
 import { ZContour } from '../ui/ZContour'
+import { ZScene, hasWebGL } from '../ui/ZScene'
 import './Hub.css'
 
 const demos = [
@@ -14,6 +15,7 @@ const demos = [
 
 export function Hub() {
   const [angle, setAngle] = useState(0)
+  const [webgl] = useState(() => hasWebGL())
   const raf = useRef(0)
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -22,7 +24,7 @@ export function Hub() {
     const tick = (t: number) => {
       const dt = (t - last) / 1000
       last = t
-      setAngle((a) => a + dt * 0.9)
+      setAngle((a) => a + dt * 0.6)
       raf.current = requestAnimationFrame(tick)
     }
     raf.current = requestAnimationFrame(tick)
@@ -44,7 +46,7 @@ export function Hub() {
         <p className="lede measure">Interactive lessons built on the real figures of one car: a 2024 Nissan Z Performance with the six-speed manual, in Ikazuchi Yellow.</p>
       </section>
       <div className="hub-car">
-        <ZContour wheelAngle={angle} className="hub-car-svg" />
+        {webgl ? <ZScene view="hero" wheelAngle={angle} className="hub-scene" fallback={<ZContour wheelAngle={angle} className="hub-car-svg" />} /> : <ZContour wheelAngle={angle} className="hub-car-svg" />}
       </div>
       <section className="wrap hub-list">
         {demos.map((d) => (
