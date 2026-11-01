@@ -29,5 +29,5 @@ function HeroScene({ yaw }: { yaw: React.RefObject<number> }) {
 
 export function HeroCarFigure() {
   const yaw = useRef(-0.5)
-  return <Figure label="The 2024 Nissan Z, which you can turn by dragging" yaw={yaw} aspect={16 / 8} phoneAspect={4 / 3} wide scene={<HeroScene yaw={yaw} />} caption={<>The car in this article: Nissan Z Performance, six-speed manual. Drag sideways to turn it.</>} />
+  return <Figure label="The 2024 Nissan Z, which you can turn by dragging" yaw={yaw} aspect={16 / 8} phoneAspect={4 / 3} wide scene={<HeroScene yaw={yaw} />} />
 }

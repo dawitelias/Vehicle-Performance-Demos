@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { Link } from '../app/router'
-import { GLHost } from './gl/GLHost'
 import { HeroCarFigure } from './figures/HeroCar'
 import { WrenchFigure } from './figures/Wrench'
 import { WinchFigure } from './figures/Winch'
@@ -79,10 +78,8 @@ function EnginesRace() {
 export function Article() {
   return (
     <main className="article">
-      <GLHost />
       <header className="wrap nav">
         <Link to="/">Vehicle Performance Demos</Link>
-        <span>2024 Nissan Z Performance, six-speed manual</span>
       </header>
 
       <div className="col article-head">

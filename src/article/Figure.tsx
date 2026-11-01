@@ -1,9 +1,28 @@
-import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { View } from '@react-three/drei'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { NeutralToneMapping } from 'three'
 import { hasWebGL } from '../ui/ZScene'
 
 /**
- * A figure in the reading column: a stage drawn by the shared WebGL canvas,
+ * True while the element is within about one screen of the viewport. Figures
+ * mount their WebGL canvas only then, so a long article holds a few live
+ * contexts at a time rather than one per figure.
+ */
+function useNearViewport(ref: React.RefObject<HTMLElement | null>) {
+  const [near, setNear] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setNear(e.isIntersecting), { rootMargin: '100% 0px 100% 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [ref])
+  return near
+}
+
+/**
+ * A figure in the reading column: a stage with its own WebGL canvas, which
+ * scrolls with the page exactly like the text around it,
  * optional HTML overlays (readouts) on top of it, controls beneath, then a
  * caption. Dragging sideways on the stage turns the scene: the drag writes
  * into `yaw`, which the scene reads every frame. Vertical drags still scroll
@@ -36,6 +55,8 @@ export function Figure({
 }) {
   const [gl] = useState(() => hasWebGL())
   const start = useRef<{ x: number; yaw: number } | null>(null)
+  const stage = useRef<HTMLDivElement>(null)
+  const near = useNearViewport(stage)
   const style = { '--fig-aspect': aspect, '--fig-aspect-phone': phoneAspect ?? aspect } as CSSProperties
   const onDown = (e: React.PointerEvent) => {
     if (!drag || !yaw) return
@@ -52,6 +73,7 @@ export function Figure({
   return (
     <figure className={`fig ${wide ? 'fig-wide' : ''}`}>
       <div
+        ref={stage}
         className={`fig-stage ${drag && yaw ? 'is-draggable' : ''}`}
         style={style}
         role="img"
@@ -62,7 +84,15 @@ export function Figure({
         onPointerCancel={onUp}
         onPointerLeave={onUp}
       >
-        {gl && scene ? <View className="fig-view">{scene}</View> : fallback}
+        {gl && scene ? (
+          near && (
+            <Canvas className="fig-view" dpr={[1, 2]} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', toneMapping: NeutralToneMapping }} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+              {scene}
+            </Canvas>
+          )
+        ) : (
+          fallback
+        )}
         {overlay && <div className="fig-overlay">{overlay}</div>}
       </div>
       {controls && <div className="fig-controls">{controls}</div>}
