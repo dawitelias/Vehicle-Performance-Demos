@@ -262,8 +262,8 @@ export function ZScene({ wheelAngle = 0, exploded = 0, view = 'hero', autoRotate
           <directionalLight position={[8, 3, -6]} intensity={0.6} color="#9bb6ff" />
           <Suspense fallback={null}>
             {resolved && <Model wheelAngle={wheelAngle} exploded={exploded} url={resolved} />}
-            {labels?.map((l) => (
-              <Html key={l.text} position={l.at} center={false} distanceFactor={undefined} style={{ pointerEvents: 'none' }} zIndexRange={[2, 0]}>
+            {labels?.map((l, i) => (
+              <Html key={l.text} position={l.at} center={false} distanceFactor={undefined} style={{ pointerEvents: 'none', opacity: Math.min(1, Math.max(0, (exploded - i * 0.25) / 0.35)), transition: 'opacity 120ms linear' }} zIndexRange={[2, 0]}>
                 <span className="zlabel" style={{ color: l.color ?? '#9ea87a', borderColor: l.color ?? '#9ea87a' }}>
                   {l.text}
                 </span>

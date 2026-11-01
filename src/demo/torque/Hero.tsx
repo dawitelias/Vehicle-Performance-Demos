@@ -9,37 +9,52 @@ const LABELS: { text: string; at: [number, number, number]; color?: string }[] =
   { text: '275/35R19 rear, 784 turns a mile', at: [-2.7, 0.2, -1.5] },
 ]
 
-/** Eases the exploded view open after the page settles, then idles the wheels. */
-function useExplode() {
+/**
+ * The exploded view is driven by scrolling: assembled while the hero sits under
+ * the headline, pulled apart as the reader scrolls it upward. The wheels idle
+ * slowly the whole time.
+ */
+function useExplode(ref: { current: HTMLElement | null }) {
   const [t, setT] = useState(0)
   const [angle, setAngle] = useState(0)
   const raf = useRef(0)
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) {
-      setT(1)
-      return
+    const measure = () => {
+      const el = ref.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      const vh = window.innerHeight
+      // 0 when the scene's top is at 70% of the viewport height, 1 when it reaches 15%
+      const p = (vh * 0.7 - r.top) / (vh * 0.55)
+      setT(Math.min(1, Math.max(0, p)))
     }
-    const t0 = performance.now() + 900
-    let last = performance.now()
-    const tick = (now: number) => {
-      const dt = (now - last) / 1000
-      last = now
-      const p = Math.min(1, Math.max(0, (now - t0) / 1800))
-      setT(1 - Math.pow(1 - p, 3))
-      setAngle((a) => a + dt * 0.5)
+    measure()
+    window.addEventListener('scroll', measure, { passive: true })
+    window.addEventListener('resize', measure)
+    if (!reduce) {
+      let last = performance.now()
+      const tick = (now: number) => {
+        const dt = (now - last) / 1000
+        last = now
+        setAngle((a) => a + dt * 0.5)
+        raf.current = requestAnimationFrame(tick)
+      }
       raf.current = requestAnimationFrame(tick)
     }
-    raf.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf.current)
-  }, [])
+    return () => {
+      window.removeEventListener('scroll', measure)
+      window.removeEventListener('resize', measure)
+      cancelAnimationFrame(raf.current)
+    }
+  }, [ref])
   return { t, angle }
 }
 
 export function Hero() {
-  const { t, angle } = useExplode()
   const [webgl] = useState(() => hasWebGL())
   const [wrapRef, narrow] = useNarrow<HTMLDivElement>(700)
+  const { t, angle } = useExplode(wrapRef)
   const drawing = <ZContour wheelAngle={angle} exploded={t} className="hero-car-svg" />
   return (
     <section>
