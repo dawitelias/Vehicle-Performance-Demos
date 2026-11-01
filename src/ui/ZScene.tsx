@@ -1,4 +1,4 @@
-import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
+import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import { EffectComposer, Bloom, ChromaticAberration, Noise, Vignette } from '@react-three/postprocessing'
@@ -19,6 +19,7 @@ import {
   Vector3,
   type Object3D,
 } from 'three'
+import { resolveModelUrl } from './modelUrl'
 
 /**
  * The Z as a real model, lit the way the rest of the site is drawn: a near-black
@@ -231,6 +232,17 @@ export function hasWebGL(): boolean {
 
 export function ZScene({ wheelAngle = 0, exploded = 0, view = 'hero', autoRotate = true, labels, className, url, fallback }: ZSceneProps & { fallback: ReactNode }) {
   const reduce = useMemo(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
+  const [resolved, setResolved] = useState<string | null>(url ?? null)
+  useEffect(() => {
+    if (url) return
+    let live = true
+    resolveModelUrl().then((u) => {
+      if (live) setResolved(u)
+    })
+    return () => {
+      live = false
+    }
+  }, [url])
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     // keep the WebGL canvas from running while off screen
@@ -249,7 +261,7 @@ export function ZScene({ wheelAngle = 0, exploded = 0, view = 'hero', autoRotate
           <directionalLight position={[-6, 8, 4]} intensity={0.7} color="#fff1d6" />
           <directionalLight position={[8, 3, -6]} intensity={0.6} color="#9bb6ff" />
           <Suspense fallback={null}>
-            <Model wheelAngle={wheelAngle} exploded={exploded} url={url} />
+            {resolved && <Model wheelAngle={wheelAngle} exploded={exploded} url={resolved} />}
             {labels?.map((l) => (
               <Html key={l.text} position={l.at} center={false} distanceFactor={undefined} style={{ pointerEvents: 'none' }} zIndexRange={[2, 0]}>
                 <span className="zlabel" style={{ color: l.color ?? '#9ea87a', borderColor: l.color ?? '#9ea87a' }}>

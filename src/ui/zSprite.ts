@@ -2,6 +2,7 @@ import { AmbientLight, DirectionalLight, OrthographicCamera, Scene, WebGLRendere
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { buildZ } from './ZScene'
+import { resolveModelUrl } from './modelUrl'
 
 /**
  * Renders the real model once, side-on, to a transparent PNG for use as a
@@ -10,9 +11,9 @@ import { buildZ } from './ZScene'
  */
 let promise: Promise<string | null> | null = null
 
-export function zSprite(url = '/models/z.glb'): Promise<string | null> {
+export function zSprite(url?: string): Promise<string | null> {
   if (promise) return promise
-  promise = new Promise((resolve) => {
+  promise = (url ? Promise.resolve(url) : resolveModelUrl()).then((modelUrl) => new Promise<string | null>((resolve) => {
     let renderer: WebGLRenderer | null = null
     try {
       renderer = new WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true })
@@ -26,7 +27,7 @@ export function zSprite(url = '/models/z.glb'): Promise<string | null> {
     renderer.setPixelRatio(1)
     renderer.setClearColor(0x000000, 0)
     new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(
-      url,
+      modelUrl,
       (gltf) => {
         const scene = new Scene()
         const { root } = buildZ(gltf.scene, { value: 1.0 })
@@ -54,6 +55,6 @@ export function zSprite(url = '/models/z.glb'): Promise<string | null> {
         resolve(null)
       },
     )
-  })
+  }))
   return promise
 }
