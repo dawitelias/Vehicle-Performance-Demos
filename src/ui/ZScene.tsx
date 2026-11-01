@@ -128,8 +128,10 @@ export function buildZ(sceneIn: Object3D): { root: Group; wheels: WheelGroup[]; 
         const g = part.toNonIndexed()
         g.translate(-center.x, -center.y, -center.z)
         const grp = new Group()
+        grp.name = 'wheel'
         grp.position.copy(center)
         const mesh = new Mesh(g, mat)
+        mesh.name = name
         mesh.castShadow = true
         grp.add(mesh)
         root.add(grp)
@@ -138,6 +140,7 @@ export function buildZ(sceneIn: Object3D): { root: Group; wheels: WheelGroup[]; 
       continue
     }
     const mesh = new Mesh(geo, mat)
+    mesh.name = name
     mesh.renderOrder = name.includes('window') ? 2 : 0
     root.add(mesh)
   }

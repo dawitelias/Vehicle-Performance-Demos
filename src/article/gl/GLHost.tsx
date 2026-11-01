@@ -16,7 +16,7 @@ export function GLHost() {
       eventPrefix="client"
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', toneMapping: NeutralToneMapping, toneMappingExposure: 1 }}
-      style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 4 }}
+      style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}
     >
       <View.Port />
     </Canvas>

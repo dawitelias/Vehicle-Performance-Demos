@@ -7,9 +7,9 @@ import { ForceArrow, TorqueArrow } from '../gl/Arrows'
 
 const fmt = (n: number, d = 0) => n.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d })
 
-const steel = () => new MeshStandardMaterial({ color: new Color('#c4c7ce'), metalness: 1, roughness: 0.28 })
-const darkSteel = () => new MeshStandardMaterial({ color: new Color('#4a4c52'), metalness: 1, roughness: 0.45 })
-const wall = () => new MeshStandardMaterial({ color: new Color('#141416'), metalness: 0.3, roughness: 0.75 })
+const steel = () => new MeshStandardMaterial({ color: new Color('#d8dbe1'), metalness: 0.55, roughness: 0.3, envMapIntensity: 1.6 })
+const darkSteel = () => new MeshStandardMaterial({ color: new Color('#9a9da4'), metalness: 0.5, roughness: 0.4, envMapIntensity: 1.4 })
+const flangeMat = () => new MeshStandardMaterial({ color: new Color('#5a5d63'), metalness: 0.4, roughness: 0.6, envMapIntensity: 1.2 })
 
 const FORCE_SCALE = 0.008 // units of length per lb
 const HANDLE = 1.6 // ft
@@ -17,7 +17,7 @@ const HANDLE = 1.6 // ft
 function WrenchScene({ force, dist, free, yaw, angle }: { force: number; dist: number; free: boolean; yaw: React.RefObject<number>; angle: React.RefObject<number> }) {
   const root = useRef<Group>(null)
   const wrench = useRef<Group>(null)
-  const m = useMemo(() => ({ steel: steel(), dark: darkSteel(), wall: wall() }), [])
+  const m = useMemo(() => ({ steel: steel(), dark: darkSteel(), flange: flangeMat() }), [])
   useYaw(root, yaw)
   useFrame((_, dt) => {
     if (free && force > 0) angle.current += dt * 0.6
@@ -25,10 +25,11 @@ function WrenchScene({ force, dist, free, yaw, angle }: { force: number; dist: n
   })
   const torque = force * dist
   return (
-    <Stage camera={[1.1, 0.55, 3.4]} target={[0.6, -0.1, 0]} fov={34} floor={false} shadow={false}>
+    <Stage camera={[0.8, 0.75, 2.25]} target={[0.62, -0.02, 0]} fov={34} floor={false} shadow={false}>
       <group ref={root}>
-        <mesh material={m.wall} position={[0.4, 0, -0.06]}>
-          <boxGeometry args={[4.2, 2.6, 0.1]} />
+        {/* a round flange the bolt is threaded into */}
+        <mesh material={m.flange} rotation-x={Math.PI / 2} position={[0, 0, -0.03]}>
+          <cylinderGeometry args={[0.42, 0.42, 0.06, 64]} />
         </mesh>
         {/* bolt: shaft into the wall, hex head */}
         <mesh material={m.dark} rotation-x={Math.PI / 2} position={[0, 0, 0.04]}>
@@ -53,8 +54,8 @@ function WrenchScene({ force, dist, free, yaw, angle }: { force: number; dist: n
           {/* distance marker along the handle */}
           <ForceArrow from={[0, -0.16, 0.14]} dir={[1, 0, 0]} length={dist} radius={0.004} head={0.05} color="#f1e6cf" />
         </group>
-        <group position={[0, 0, 0.3]}>
-          <TorqueArrow radius={0.32} start={Math.PI * 0.55} sweep={-Math.min(Math.PI * 1.7, 0.15 + torque / 140)} thickness={0.008 + torque / 24000} />
+        <group position={[0, 0, 0.26]}>
+          <TorqueArrow radius={0.3} from={Math.PI * 0.8} to={Math.PI * 0.8 - Math.min(Math.PI * 1.6, 0.7 + torque / 80)} thickness={0.007 + torque / 26000} />
         </group>
       </group>
     </Stage>
@@ -80,7 +81,7 @@ export function WrenchFigure() {
     <Figure
       label="A wrench on a bolt with a force pushing down on the handle"
       yaw={yaw}
-      aspect={16 / 9}
+      aspect={2}
       phoneAspect={4 / 3}
       scene={<WrenchScene force={force} dist={dist} free={free === 'free'} yaw={yaw} angle={angle} />}
       overlay={

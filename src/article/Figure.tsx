@@ -122,9 +122,10 @@ export function Choice<T extends string | number>({ label, options, value, onCha
 }
 
 /** Small corner readouts drawn over a figure. */
-export function Readouts({ items, corner = 'tl' }: { items: { label: string; value: string; accent?: boolean }[]; corner?: 'tl' | 'tr' | 'bl' | 'br' }) {
+export function Readouts({ items, corner = 'tl', title }: { items: { label: string; value: string; accent?: boolean }[]; corner?: 'tl' | 'tr' | 'bl' | 'br' | 'inline'; title?: string }) {
   return (
     <dl className={`readouts readouts-${corner}`}>
+      {title && <div className="readouts-title">{title}</div>}
       {items.map((i) => (
         <div key={i.label} className="readouts-row">
           <dt>{i.label}</dt>

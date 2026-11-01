@@ -1,6 +1,7 @@
 /* Long-form article: one reading column, figures inset at column width or a little wider. */
 
 .article { position: relative; z-index: 3; }
+.article > :not(canvas):not(.gl-host) { position: relative; z-index: 1; }
 .article-head { padding-block: clamp(48px, 9vh, 120px) 8px; }
 .article-title { font-weight: 720; font-stretch: 108%; letter-spacing: -0.03em; line-height: 1.02; font-size: clamp(38px, 6vw, 72px); margin: 0 0 18px; text-wrap: balance; max-width: 18ch; }
 .article-meta { color: var(--fg-3); font-size: 14px; margin: 0; }
@@ -22,7 +23,7 @@
 .fig { margin: 2em 0 2.4em; }
 .fig-wide { margin-inline: calc((min(980px, 100vw) - min(680px, 100vw)) / -2); }
 @media (max-width: 1000px) { .fig-wide { margin-inline: 0; } }
-.fig-stage { position: relative; width: 100%; aspect-ratio: var(--fig-aspect); max-width: 100%; border-radius: 4px; overflow: hidden; touch-action: pan-y; background: radial-gradient(120% 90% at 50% 40%, rgba(255,240,210,0.035), transparent 70%); }
+.fig-stage { position: relative; width: 100%; aspect-ratio: var(--fig-aspect); max-width: 100%; border-radius: 4px; overflow: hidden; touch-action: pan-y; }
 @media (max-width: 600px) { .fig-stage { aspect-ratio: var(--fig-aspect-phone); } }
 .fig-stage.is-draggable { cursor: grab; }
 .fig-stage.is-draggable:active { cursor: grabbing; }
@@ -35,12 +36,14 @@
 /* Readouts in a figure corner */
 .readouts { position: absolute; margin: 0; display: grid; gap: 2px; padding: 12px 14px; font-size: 13px; }
 .readouts-tl { top: 0; left: 0; }
+.readouts-inline { position: static; display: flex; flex-wrap: wrap; gap: 6px 22px; padding: 4px 0 6px; }
 .readouts-tr { top: 0; right: 0; text-align: right; }
 .readouts-bl { bottom: 0; left: 0; }
 .readouts-br { bottom: 0; right: 0; text-align: right; }
 .readouts-row { display: flex; gap: 10px; align-items: baseline; }
 .readouts-tr .readouts-row, .readouts-br .readouts-row { justify-content: flex-end; }
 .readouts dt { color: var(--fg-3); }
+.readouts-title { color: var(--fg-2); font-weight: 600; margin-bottom: 2px; }
 .readouts dd { margin: 0; color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
 .readouts dd.is-accent { color: var(--yellow); }
 
@@ -58,7 +61,7 @@
 .slider-input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(242,194,48,0.55); }
 @media (max-width: 560px) {
   .slider { grid-template-columns: 1fr auto; gap: 0 12px; }
-  .slider-input { grid-column: 1 / -1; grid-row: 2; }
+  .slider .slider-input { grid-column: 1 / -1; grid-row: 2; }
 }
 
 /* Choice rows */
@@ -84,3 +87,6 @@
 .results-wrap { overflow-x: auto; }
 
 .gl-host { display: block; }
+.swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
+.article-foot { padding-block: 48px 96px; display: grid; gap: 18px; }
+.article-foot a { color: var(--fg-2); }

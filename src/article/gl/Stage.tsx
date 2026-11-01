@@ -24,15 +24,21 @@ export function Stage({
   shadowScale?: number
   floorSize?: number
 }) {
-  const { gl, scene } = useThree()
+  const { gl, scene, size } = useThree()
+  // keep the subject's width in frame on narrow figures by widening the vertical field of view
+  const aspect = size.width / Math.max(1, size.height)
+  const REF = 1.8
+  const effFov = aspect >= REF ? fov : Math.min(70, (2 * Math.atan(Math.tan((fov * Math.PI) / 360) * (REF / aspect)) * 180) / Math.PI)
   useLayoutEffect(() => {
     scene.environment = studioEnvironment(gl)
+    scene.environmentIntensity = 1.2
   }, [gl, scene])
   return (
     <>
-      <PerspectiveCamera makeDefault position={camera} fov={fov} near={0.05} far={200} onUpdate={(c) => c.lookAt(...target)} />
-      <ambientLight intensity={0.15} />
-      <directionalLight position={[-4, 6, 3]} intensity={1.1} color="#fff1dc" />
+      <PerspectiveCamera makeDefault position={camera} fov={effFov} near={0.05} far={300} onUpdate={(c) => c.lookAt(...target)} />
+      <hemisphereLight args={['#fff3e0', '#1a1a1e', 0.7]} />
+      <directionalLight position={[-3, 5, 4]} intensity={1.8} color="#fff1dc" />
+      <directionalLight position={[4, 2, -3]} intensity={0.6} color="#bcd0ff" />
       {children}
       {shadow && <ContactShadows position={[0, 0.001, 0]} opacity={0.7} scale={shadowScale} blur={2.2} far={2} resolution={256} frames={1} />}
       {floor && <FloorGrid size={floorSize} />}
@@ -88,6 +94,6 @@ export function haloMaterial(color: string, opacity: number) {
     uniforms: { uColor: { value: new Color(color) }, uOpacity: { value: opacity } },
     vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `uniform vec3 uColor; uniform float uOpacity; varying vec3 vN; varying vec3 vV;
-      void main(){ float f = pow(abs(dot(normalize(vN), normalize(vV))), 1.6); gl_FragColor = vec4(uColor * f * uOpacity, 1.0); }`,
+      void main(){ float f = pow(abs(dot(normalize(vN), normalize(vV))), 2.4); gl_FragColor = vec4(uColor, f * uOpacity); }`,
   })
 }

@@ -8,8 +8,8 @@ const demos = [
   {
     to: '/torque-vs-horsepower',
     title: 'Torque and horsepower',
-    line: 'One engine. Two numbers. What each one actually does.',
-    status: 'Five chapters',
+    line: 'What each number measures, and when each one decides how your car accelerates.',
+    status: 'Long read with interactive figures',
   },
 ]
 
@@ -38,12 +38,8 @@ export function Hub() {
         <span>2024 Nissan Z, 6MT</span>
       </header>
       <section className="wrap hub-hero">
-        <h1 className="display display-xl">
-          Know what
-          <br />
-          the numbers do.
-        </h1>
-        <p className="lede measure">Interactive lessons built on the real figures of one car: a 2024 Nissan Z Performance with the six-speed manual, in Ikazuchi Yellow.</p>
+        <h1 className="display display-l">Vehicle performance, worked out on a 2024 Nissan Z</h1>
+        <p className="lede measure">Interactive articles on how cars accelerate, using the published figures for a Nissan Z Performance with the six-speed manual.</p>
       </section>
       <div className="hub-car">
         {webgl ? <ZScene view="hero" wheelAngle={angle} className="hub-scene" fallback={<ZContour wheelAngle={angle} className="hub-car-svg" />} /> : <ZContour wheelAngle={angle} className="hub-car-svg" />}
@@ -60,7 +56,7 @@ export function Hub() {
           </Link>
         ))}
         <hr className="rule" />
-        <p className="small hub-foot">More concepts will land here. Each one uses the same engine, gearbox and tyre data, so they agree with each other.</p>
+        <p className="small hub-foot">More articles will follow. They all use the same engine, gearbox and tyre data, so their numbers agree with each other.</p>
       </section>
     </main>
   )
