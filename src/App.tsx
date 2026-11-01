@@ -2,11 +2,11 @@ import { RouterProvider, useRoute } from './app/router'
 import { Ground } from './ui/Ground'
 import { Fx } from './ui/Fx'
 import { Hub } from './pages/Hub'
-import { TorqueVsHorsepower } from './pages/TorqueVsHorsepower'
+import { Article } from './article/Article'
 
 function Routes() {
   const { path } = useRoute()
-  if (path === '/torque-vs-horsepower') return <TorqueVsHorsepower />
+  if (path === '/torque-vs-horsepower') return <Article />
   return <Hub />
 }
 
