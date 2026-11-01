@@ -74,8 +74,8 @@ export function ThrustFigure() {
           <text x={x(150)} y={y(resistanceForce(nissanZ, mpsFromMph(150)) / N_PER_LB) - 8} textAnchor="end" fill="#7e7b70">
             drag
           </text>
-          <path d={envD} fill="none" stroke="#f2c230" strokeWidth={1.2} strokeDasharray="5 4" />
-          <text x={x(narrow ? 92 : 100)} y={y(envelope(narrow ? 92 : 100)) - 10} fill="#f2c230">
+          <path d={envD} fill="none" stroke="#f3d03e" strokeWidth={1.2} strokeDasharray="5 4" />
+          <text x={x(narrow ? 92 : 100)} y={y(envelope(narrow ? 92 : 100)) - 10} fill="#f3d03e">
             400 hp limit
           </text>
           {curves.map((c, i) => {
@@ -93,7 +93,7 @@ export function ThrustFigure() {
             )
           })}
           <line x1={x(mph)} x2={x(mph)} y1={T} y2={B} stroke="#9ea87a" strokeOpacity={0.6} />
-          {states.map((s, i) => (s.inRange ? <circle key={i} cx={x(mph)} cy={y(s.push)} r={i === best ? 5 : 3} fill={i === best ? '#f2c230' : '#8d897f'} /> : null))}
+          {states.map((s, i) => (s.inRange ? <circle key={i} cx={x(mph)} cy={y(s.push)} r={i === best ? 5 : 3} fill={i === best ? '#f3d03e' : '#8d897f'} /> : null))}
           <line x1={L} x2={R} y1={B} y2={B} stroke="#3a3a3f" />
         </svg>
       }

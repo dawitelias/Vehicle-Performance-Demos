@@ -92,7 +92,7 @@ function upgradeMaterial(name: string, m: Material): Material {
   const std = m as MeshStandardMaterial
   if (name.includes('paint')) {
     return new MeshPhysicalMaterial({
-      color: new Color('#f2c230'),
+      color: new Color('#f3d03e'),
       metalness: 0.15,
       roughness: 0.32,
       clearcoat: 1,

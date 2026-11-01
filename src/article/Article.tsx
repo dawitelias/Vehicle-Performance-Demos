@@ -15,7 +15,7 @@ import { nissanZ, z370, ghostHighRevRegeared, ghostDiesel, ev } from '../sim/veh
 import { mpsFromMph } from '../sim/units'
 import './article.css'
 
-const PAINT = { z: '#f2c230', z370: '#b9bcc2', screamer: '#e8e3d6', monster: '#5f6670', ev: '#9fb6d8' }
+const PAINT = { z: '#f3d03e', z370: '#b9bcc2', screamer: '#e8e3d6', monster: '#5f6670', ev: '#9fb6d8' }
 const ORD = ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth']
 
 function PassRace() {

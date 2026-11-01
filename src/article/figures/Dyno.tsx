@@ -54,15 +54,15 @@ function DynoChart({ rpm, mode }: { rpm: number; mode: CurveMode }) {
         5,252 rpm
       </text>
       <path d={dH} fill="none" stroke="#f1e6cf" strokeWidth={1.6} />
-      <path d={dT} fill="none" stroke="#f2c230" strokeWidth={1.6} />
-      <text x={R + 8} y={y(torqueAt(curve, MAX)) + 4} fill="#f2c230" fontWeight={600}>
+      <path d={dT} fill="none" stroke="#f3d03e" strokeWidth={1.6} />
+      <text x={R + 8} y={y(torqueAt(curve, MAX)) + 4} fill="#f3d03e" fontWeight={600}>
         lb-ft
       </text>
       <text x={R + 8} y={y(hpFromTorqueRpm(torqueAt(curve, MAX), MAX)) + 4} fill="#f1e6cf" fontWeight={600}>
         hp
       </text>
       <line x1={px} x2={px} y1={T} y2={B} stroke="#9ea87a" strokeOpacity={0.6} />
-      <circle cx={px} cy={y(tq)} r={4} fill="#f2c230" />
+      <circle cx={px} cy={y(tq)} r={4} fill="#f3d03e" />
       <circle cx={px} cy={y(hp)} r={4} fill="#f1e6cf" />
     </svg>
   )

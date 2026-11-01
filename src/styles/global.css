@@ -28,8 +28,8 @@
   --fg-3: #6b685f;
   --line: #232327;
   --line-2: #3a3a3f;
-  --yellow: #f2c230;
-  --yellow-2: #ffd75a;
+  --yellow: #f3d03e;
+  --yellow-2: #ffe27a;
   --olive: #9ea87a;
   --amber: #d9a441;
   --warm: #f1e6cf;
@@ -127,9 +127,9 @@ svg { display: block; }
 .range:focus { outline: none; }
 .range::-webkit-slider-runnable-track { height: 1px; background: var(--line-2); }
 .range::-moz-range-track { height: 1px; background: var(--line-2); }
-.range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--yellow); margin-top: -8.5px; border: 0; box-shadow: 0 0 18px rgba(242,194,48,0.55); }
-.range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--yellow); border: 0; box-shadow: 0 0 18px rgba(242,194,48,0.55); }
-.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(242,194,48,0.4); }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--yellow); margin-top: -8.5px; border: 0; box-shadow: 0 0 18px rgba(243,208,62,0.55); }
+.range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--yellow); border: 0; box-shadow: 0 0 18px rgba(243,208,62,0.55); }
+.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(243,208,62,0.4); }
 
 /* Chapter rhythm */
 .chapter { padding-block: clamp(72px, 12vh, 160px) clamp(48px, 8vh, 96px); }

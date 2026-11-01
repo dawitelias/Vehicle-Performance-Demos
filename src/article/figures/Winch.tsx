@@ -25,7 +25,7 @@ function WinchScene({ torque, rpm, yaw }: { torque: number; rpm: number; yaw: Re
       frame: new MeshStandardMaterial({ color: new Color('#55585e'), metalness: 0.4, roughness: 0.6 }),
       rope: new MeshStandardMaterial({ color: new Color('#d9cfb8'), metalness: 0, roughness: 0.8 }),
       block: new MeshStandardMaterial({ color: new Color('#2b2c30'), metalness: 0.3, roughness: 0.55 }),
-      band: new MeshStandardMaterial({ color: new Color('#f2c230'), metalness: 0.2, roughness: 0.5 }),
+      band: new MeshStandardMaterial({ color: new Color('#f3d03e'), metalness: 0.2, roughness: 0.5 }),
     }),
     [],
   )

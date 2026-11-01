@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Color, Curve, MeshBasicMaterial, Quaternion, TubeGeometry, Vector3 } from 'three'
 import { haloMaterial } from './Stage'
 
-export const YELLOW = '#f2c230'
+export const YELLOW = '#f3d03e'
 export const WARM = '#f1e6cf'
 
 function glowMat(color: string) {

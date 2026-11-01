@@ -142,7 +142,7 @@ function Bracket({ x, y, text, color = '#9ea87a' }: ZLabel) {
   )
 }
 
-export const ZContour = memo(function ZContour({ wheelAngle = 0, color = '#f2c230', className, showScale = true, exploded, labels }: ZContourProps) {
+export const ZContour = memo(function ZContour({ wheelAngle = 0, color = '#f3d03e', className, showScale = true, exploded, labels }: ZContourProps) {
   const H = exploded !== undefined ? 640 : 340
   const t = exploded ?? 0
   const ticks: JSX.Element[] = []
