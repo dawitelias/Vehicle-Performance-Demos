@@ -239,8 +239,8 @@ export function Article() {
       <footer className="col article-foot">
         <hr className="rule" />
         <p className="small">
-          Car figures: Nissan's published specifications for the 2024 Z Performance with the six-speed manual (350 lb-ft, 400 hp, gear ratios, final drive 3.538, 275/35R19 rear tyres, 3,536 lb), with a drag coefficient of 0.31 and an estimated frontal area of 2.0 m². The simulated car runs 0 to 60 mph in 4.8 s and the quarter mile in 13.0 s at 111 mph; Car and Driver measured 4.5 s and 13.0 s at 111 mph. The 3D model is the{' '}
-          <a href="https://sketchfab.com/3d-models/2020-nissan-z-proto-concept-03606ad387374824af0df58b6ca5f574">2020 Nissan Z Proto concept on Sketchfab</a>, used under its Sketchfab licence.
+          Car figures: Nissan's published specifications for the 2024 Z Performance with the six-speed manual (350 lb-ft, 400 hp, gear ratios, final drive 3.538, 275/35R19 rear tyres, 3,536 lb), with a drag coefficient of 0.31 and an estimated frontal area of 2.0 m². The simulated car runs 0 to 60 mph in 4.8 s and the quarter mile in 13.0 s at 111 mph; Car and Driver measured 4.5 s and 13.0 s at 111 mph. 3D model: <a href="https://sketchfab.com/3d-models/2020-nissan-z-proto-concept-03606ad387374824af0df58b6ca5f574">2020 Nissan Z Proto Concept</a> by{' '}
+          <a href="https://sketchfab.com/ddiaz-design">Ddiaz Design</a>, licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>. It was compressed and its paint and wheels were changed for this page.
         </p>
       </footer>
     </main>

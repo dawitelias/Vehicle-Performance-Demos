@@ -30,7 +30,7 @@ npm run build      # typecheck + production build to dist/
 
 ## The 3D model
 
-`public/models/z.glb` is the [2020 Nissan Z Proto concept](https://sketchfab.com/3d-models/2020-nissan-z-proto-concept-03606ad387374824af0df58b6ca5f574) from Sketchfab, used under the licence stated on that page, run through `gltf-transform optimize --compress meshopt` (9.9 MB to 2.2 MB, 188k triangles). `public/models/z-lite.glb` is the same model simplified to 57k triangles for the race figures. The model keeps its own materials, with the paint replaced by a clear-coated Ikazuchi yellow; the merged wheel mesh is split into four so each wheel turns on its own axle. Every figure renders through one shared WebGL canvas, so the article uses a single GPU context however many figures it has.
+`public/models/z.glb` is [2020 Nissan Z Proto Concept](https://sketchfab.com/3d-models/2020-nissan-z-proto-concept-03606ad387374824af0df58b6ca5f574) by [Ddiaz Design](https://sketchfab.com/ddiaz-design), licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). The licence allows non-commercial use only, and adapted versions of the model must carry the same licence. The model was run through `gltf-transform optimize --compress meshopt` (9.9 MB to 2.2 MB, 188k triangles). `public/models/z-lite.glb` is the same model simplified to 57k triangles for the race figures. The model keeps its own materials, with the paint replaced by a clear-coated Ikazuchi yellow; the merged wheel mesh is split into four so each wheel turns on its own axle. Every figure renders through one shared WebGL canvas, so the article uses a single GPU context however many figures it has.
 
 ## Deploying
 
