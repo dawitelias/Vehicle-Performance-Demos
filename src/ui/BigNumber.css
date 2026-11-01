@@ -1,0 +1,22 @@
+.bignum {
+  position: relative;
+  height: var(--bignum-h, clamp(150px, 34vw, 400px));
+  max-width: 100%;
+  overflow: hidden;
+}
+.bignum-slice { position: absolute; inset: 0; overflow: hidden; }
+.bignum-ch {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  mix-blend-mode: screen; will-change: transform;
+  font-weight: 800; font-stretch: 112%; letter-spacing: -0.045em; line-height: 1;
+  font-size: var(--bignum-size, clamp(150px, 34vw, 400px));
+  font-variant-numeric: tabular-nums;
+  color: #f4f2ec;
+}
+.bignum-ch.r { color: #ff2e1f; }
+.bignum-ch.g { color: #2bff5e; }
+.bignum-ch.b { color: #2456ff; }
+.bignum-cut { position: absolute; left: 0; right: 0; height: 1px; background: var(--bg, #08080a); }
+@media (prefers-reduced-motion: reduce) {
+  .bignum-ch { transform: none !important; filter: none !important; }
+}

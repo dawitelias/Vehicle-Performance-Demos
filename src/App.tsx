@@ -1,5 +1,19 @@
-// Placeholder root component. The real UI (hub at "/" and the
-// "/torque-vs-horsepower" demo) will be designed and built separately.
+import { RouterProvider, useRoute } from './app/router'
+import { Ground } from './ui/Ground'
+import { Hub } from './pages/Hub'
+import { TorqueVsHorsepower } from './pages/TorqueVsHorsepower'
+
+function Routes() {
+  const { path } = useRoute()
+  if (path === '/torque-vs-horsepower') return <TorqueVsHorsepower />
+  return <Hub />
+}
+
 export default function App() {
-  return <h1>Vehicle Performance Demos</h1>
+  return (
+    <RouterProvider>
+      <Ground />
+      <Routes />
+    </RouterProvider>
+  )
 }
