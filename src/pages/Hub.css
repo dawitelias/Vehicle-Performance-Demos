@@ -1,0 +1,19 @@
+.hub-hero { padding-block: clamp(40px, 8vh, 110px) 20px; display: grid; gap: 26px; }
+.hub-car { padding-block: 8px 24px; overflow: hidden; }
+.hub-car-svg { width: min(1240px, 112vw); margin: 0 auto; height: auto; transform: translateX(-2%); }
+@media (max-width: 700px) { .hub-car-svg { width: 128vw; transform: translateX(-11%); } }
+.hub-list { padding-block: 20px 80px; display: grid; gap: 22px; }
+.hub-item {
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'title arrow' 'line arrow' 'status arrow';
+  gap: 8px 24px; align-items: center; text-decoration: none; padding-block: 26px; border-top: 1px solid var(--line);
+  transition: color 120ms ease;
+}
+.hub-item:hover .hub-item-arrow { transform: translateX(6px); color: var(--yellow); }
+.hub-item-title { grid-area: title; }
+.hub-item-line { grid-area: line; max-width: 50ch; }
+.hub-item-status { grid-area: status; }
+.hub-item-arrow { grid-area: arrow; font-size: 40px; color: var(--fg-2); transition: transform 160ms ease, color 160ms ease; }
+.hub-foot { max-width: 56ch; }
+
+.hub-scene { width: min(1180px, 100%); margin: 0 auto; aspect-ratio: 16 / 8; }
+@media (max-width: 700px) { .hub-scene { aspect-ratio: 4 / 3; } }
