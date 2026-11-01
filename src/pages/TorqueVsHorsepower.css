@@ -3,8 +3,9 @@
 /* Hero */
 .hero { padding-block: clamp(36px, 7vh, 96px) 0; display: grid; gap: 28px; }
 .hero-car { position: relative; overflow: hidden; padding-block: 12px 0; }
-.hero-car-svg { width: min(1240px, 112vw); margin: 0 auto; height: auto; transform: translateX(-2%); }
-@media (max-width: 700px) { .hero-car-svg { width: 128vw; transform: translateX(-11%); } }
+.hero-car-svg { width: min(1180px, 100vw); margin: 0 auto; height: auto; }
+@media (max-width: 700px) { .hero-car-svg { width: 120vw; transform: translateX(-8%); } }
+.hero-car-3d { width: min(1180px, 100vw); margin: 0 auto; }
 .hero-facts { display: flex; gap: 10px 40px; flex-wrap: wrap; padding-block: 18px 0; }
 .hero-fact { display: grid; gap: 2px; }
 .hero-fact .num { font-size: clamp(30px, 4.4vw, 56px); line-height: 1; }

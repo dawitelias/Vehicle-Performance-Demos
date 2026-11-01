@@ -1,23 +1,31 @@
-/** Fixed background layers: dashed geometry, vignette, animated film grain. */
+/** Fixed background layers: a skewed plane of hairlines, corner marks, vignette, dense film grain. */
 export function Ground() {
+  const rows = []
+  for (let i = -4; i <= 18; i++) {
+    const y0 = -300 + i * 90
+    rows.push(<line key={`r${i}`} x1={-200} y1={y0} x2={1700} y2={y0 - 560} opacity={0.7} />)
+  }
+  const cols = []
+  for (let k = -2; k < 18; k++) {
+    const x = -200 + k * 120
+    cols.push(<line key={`c${k}`} x1={x} y1={1000} x2={x + 330} y2={-100} opacity={0.45} />)
+  }
   return (
     <>
       <svg className="geometry" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <g stroke="#6f6c5c" strokeWidth="0.6" fill="none" strokeDasharray="3 8" opacity="0.5">
-          <path d="M-100 700 L1500 140" />
-          <path d="M-100 860 L1500 300" />
-          <path d="M-100 560 L1500 0" />
-          <path d="M260 -60 L640 960" />
-          <path d="M880 -60 L1260 960" />
+        <g stroke="#8d8676" strokeWidth="0.5" fill="none" opacity="0.26">
+          {rows}
+          {cols}
         </g>
-        <g fill="#8a8773" opacity="0.5">
-          <rect x="200" y="140" width="3" height="3" />
-          <rect x="1130" y="96" width="3" height="3" />
-          <rect x="1250" y="720" width="3" height="3" />
-          <rect x="110" y="790" width="3" height="3" />
-          <rect x="700" y="450" width="3" height="3" />
+        <g fill="#9a9382" opacity="0.55">
+          <rect x="230" y="150" width="3.5" height="3.5" />
+          <rect x="1180" y="120" width="3.5" height="3.5" />
+          <rect x="1240" y="700" width="3.5" height="3.5" />
+          <rect x="120" y="760" width="3.5" height="3.5" />
+          <rect x="760" y="420" width="3.5" height="3.5" />
         </g>
       </svg>
+      <div className="frame" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
     </>

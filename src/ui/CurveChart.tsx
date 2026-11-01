@@ -117,19 +117,21 @@ export const CurveChart = memo(function CurveChart({ curve, rpm, minRpm = 1000, 
           <path d={pathFor(ghost, tqOf(ghost))} fill="none" stroke="#f2c230" strokeWidth={1} strokeOpacity={0.35} strokeDasharray="3 4" />
         </>
       )}
-      <path d={pathFor(curve, hpOf(curve))} fill="none" stroke="#f3efe4" strokeWidth={1.5} />
-      <path d={pathFor(curve, tqOf(curve))} fill="none" stroke="#f2c230" strokeWidth={1.5} />
+      <g filter="url(#fx-forge)">
+        <path d={pathFor(curve, hpOf(curve))} fill="none" stroke="#f1e6cf" strokeWidth={1.3} />
+        <path d={pathFor(curve, tqOf(curve))} fill="none" stroke="#f2c230" strokeWidth={1.3} />
+      </g>
       <text x={Rr + 8} y={y(torqueAt(curve, maxRpm)) + 4} fill="#f2c230" fontWeight={600}>
         torque
       </text>
-      <text x={Rr + 8} y={y(hpFromTorqueRpm(torqueAt(curve, maxRpm), maxRpm)) + 4} fill="#f3efe4" fontWeight={600}>
+      <text x={Rr + 8} y={y(hpFromTorqueRpm(torqueAt(curve, maxRpm), maxRpm)) + 4} fill="#f1e6cf" fontWeight={600}>
         horsepower
       </text>
       <line x1={px} x2={px} y1={T} y2={B} stroke="#9ea87a" strokeWidth={1} opacity={0.7} />
-      <circle cx={px} cy={y(tv)} r={3.5} fill="#f2c230" />
-      <circle cx={px} cy={y(hv)} r={3.5} fill="#f3efe4" />
+      <circle cx={px} cy={y(tv)} r={3} fill="#fff4dc" filter="url(#fx-hot)" />
+      <circle cx={px} cy={y(hv)} r={3} fill="#fff4dc" filter="url(#fx-hot)" />
       <Label py={yT} text={`${fmt(tv)} lb-ft`} color="#f2c230" />
-      <Label py={yH} text={`${fmt(hv)} hp`} color="#f3efe4" />
+      <Label py={yH} text={`${fmt(hv)} hp`} color="#f1e6cf" />
     </svg>
   )
 })

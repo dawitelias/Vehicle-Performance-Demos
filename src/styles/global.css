@@ -21,8 +21,8 @@
 
 :root {
   color-scheme: dark;
-  --bg: #08080a;
-  --bg-2: #0e0e11;
+  --bg: #0c0b0a;
+  --bg-2: #121110;
   --fg: #ede9e0;
   --fg-2: #a7a39a;
   --fg-3: #6b685f;
@@ -31,6 +31,9 @@
   --yellow: #f2c230;
   --yellow-2: #ffd75a;
   --olive: #9ea87a;
+  --amber: #d9a441;
+  --warm: #f1e6cf;
+  --hot: #fff4dc;
   --red: #e8453c;
   --font: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
   --measure: 60ch;
@@ -87,8 +90,8 @@ svg { display: block; }
 
 /* Ground: fixed grain + geometry behind everything */
 .grain {
-  position: fixed; inset: -220px; pointer-events: none; z-index: 2; opacity: 0.085; mix-blend-mode: screen;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.7 0'/></filter><rect width='280' height='280' filter='url(%23n)'/></svg>");
+  position: fixed; inset: -220px; pointer-events: none; z-index: 2; opacity: 0.2; mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.95  0 0 0 0 0.85  0 0 0 1.4 -0.55'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>");
   animation: grain 1.1s steps(6) infinite;
 }
 @keyframes grain {
@@ -96,8 +99,15 @@ svg { display: block; }
   60% { transform: translate(-22px, -18px); } 80% { transform: translate(54px, 42px); } 100% { transform: translate(0, 0); }
 }
 @media (prefers-reduced-motion: reduce) { .grain { animation: none; } }
-.geometry { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5; }
-.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0,0,0,0.55) 100%); }
+.geometry { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.9; }
+.frame { position: fixed; inset: 14px; pointer-events: none; z-index: 1; opacity: 0.45;
+  background:
+    linear-gradient(#8d8676, #8d8676) top left / 28px 1px no-repeat, linear-gradient(#8d8676, #8d8676) top left / 1px 28px no-repeat,
+    linear-gradient(#8d8676, #8d8676) top right / 28px 1px no-repeat, linear-gradient(#8d8676, #8d8676) top right / 1px 28px no-repeat,
+    linear-gradient(#8d8676, #8d8676) bottom left / 28px 1px no-repeat, linear-gradient(#8d8676, #8d8676) bottom left / 1px 28px no-repeat,
+    linear-gradient(#8d8676, #8d8676) bottom right / 28px 1px no-repeat, linear-gradient(#8d8676, #8d8676) bottom right / 1px 28px no-repeat; }
+@media (max-width: 700px) { .frame { display: none; } }
+.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(120% 100% at 50% 45%, transparent 50%, rgba(0,0,0,0.7) 100%); }
 .page { position: relative; z-index: 3; }
 
 /* Buttons: one solid, one outline. Pills, because a thumb rests on them. */

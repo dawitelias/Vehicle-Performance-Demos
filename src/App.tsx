@@ -1,5 +1,6 @@
 import { RouterProvider, useRoute } from './app/router'
 import { Ground } from './ui/Ground'
+import { Fx } from './ui/Fx'
 import { Hub } from './pages/Hub'
 import { TorqueVsHorsepower } from './pages/TorqueVsHorsepower'
 
@@ -12,6 +13,7 @@ function Routes() {
 export default function App() {
   return (
     <RouterProvider>
+      <Fx />
       <Ground />
       <Routes />
     </RouterProvider>
