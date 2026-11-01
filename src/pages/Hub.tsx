@@ -8,7 +8,7 @@ const demos = [
     to: '/torque-vs-horsepower',
     title: 'Torque and horsepower',
     line: 'One engine. Two numbers. What each one actually does.',
-    status: 'Chapter 1 of 5',
+    status: 'Five chapters',
   },
 ]
 

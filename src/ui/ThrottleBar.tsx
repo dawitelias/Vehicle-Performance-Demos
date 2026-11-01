@@ -1,6 +1,7 @@
-import { useCallback, type KeyboardEvent, type PointerEvent } from 'react'
+import { useCallback, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
+import { ControlBar, type Readout } from './ControlBar'
 
-/** The sticky control strip: a hairline slider for precision, a pill you hold to rev, live readouts. */
+/** A control bar with a hairline rpm slider and a pill you hold to rev. */
 export interface ThrottleBarProps {
   rpm: number
   minRpm: number
@@ -9,12 +10,15 @@ export interface ThrottleBarProps {
   holding: boolean
   onHold: () => void
   onRelease: () => void
-  readouts: { value: string; unit: string; accent?: boolean }[]
+  readouts: Readout[]
   holdLabel?: string
   sliderLabel?: string
+  sliderId: string
+  /** extra controls rendered before the slider (e.g. a gear picker) */
+  extra?: ReactNode
 }
 
-export function ThrottleBar({ rpm, minRpm, maxRpm, onRpm, holding, onHold, onRelease, readouts, holdLabel = 'Hold to rev', sliderLabel = 'Engine speed' }: ThrottleBarProps) {
+export function HoldButton({ holding, onHold, onRelease, label, className }: { holding: boolean; onHold: () => void; onRelease: () => void; label: string; className?: string }) {
   const down = useCallback(
     (e: PointerEvent<HTMLButtonElement>) => {
       e.preventDefault()
@@ -23,7 +27,6 @@ export function ThrottleBar({ rpm, minRpm, maxRpm, onRpm, holding, onHold, onRel
     },
     [onHold],
   )
-  const up = useCallback(() => onRelease(), [onRelease])
   const key = useCallback(
     (e: KeyboardEvent<HTMLButtonElement>) => {
       if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
@@ -34,37 +37,34 @@ export function ThrottleBar({ rpm, minRpm, maxRpm, onRpm, holding, onHold, onRel
     [onHold],
   )
   return (
-    <div className="controls">
-      <div className="wrap controls-inner">
-        <div className="readouts">
-          {readouts.map((r) => (
-            <div className="readout" key={r.unit}>
-              <span className={`v num ${r.accent ? 'yellow' : ''}`}>{r.value}</span>
-              <span className="u">{r.unit}</span>
-            </div>
-          ))}
-        </div>
-        <div>
-          <label className="sr" htmlFor="rpm-slider">
-            {sliderLabel}
-          </label>
-          <input id="rpm-slider" className="range" type="range" min={minRpm} max={maxRpm} step={10} value={Math.round(rpm)} onChange={(e) => onRpm(+e.target.value)} />
-        </div>
-        <button
-          type="button"
-          className={`btn ${holding ? 'is-on' : ''}`}
-          onPointerDown={down}
-          onPointerUp={up}
-          onPointerCancel={up}
-          onLostPointerCapture={up}
-          onKeyDown={key}
-          onKeyUp={up}
-          onBlur={up}
-          aria-pressed={holding}
-        >
-          {holdLabel}
-        </button>
+    <button
+      type="button"
+      className={`btn ${holding ? 'is-on' : ''} ${className ?? ''}`}
+      onPointerDown={down}
+      onPointerUp={onRelease}
+      onPointerCancel={onRelease}
+      onLostPointerCapture={onRelease}
+      onKeyDown={key}
+      onKeyUp={onRelease}
+      onBlur={onRelease}
+      aria-pressed={holding}
+    >
+      {label}
+    </button>
+  )
+}
+
+export function ThrottleBar({ rpm, minRpm, maxRpm, onRpm, holding, onHold, onRelease, readouts, holdLabel = 'Hold to rev', sliderLabel = 'Engine speed', sliderId, extra }: ThrottleBarProps) {
+  return (
+    <ControlBar readouts={readouts}>
+      {extra}
+      <div className="slider">
+        <label className="sr" htmlFor={sliderId}>
+          {sliderLabel}
+        </label>
+        <input id={sliderId} className="range" type="range" min={minRpm} max={maxRpm} step={10} value={Math.round(rpm)} onChange={(e) => onRpm(+e.target.value)} />
       </div>
-    </div>
+      <HoldButton holding={holding} onHold={onHold} onRelease={onRelease} label={holdLabel} />
+    </ControlBar>
   )
 }

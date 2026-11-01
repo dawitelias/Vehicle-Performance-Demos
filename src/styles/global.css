@@ -8,7 +8,7 @@
   font-weight: 100 900;
   font-stretch: 62% 125%;
   font-display: swap;
-  src: url('/fonts/Archivo-Variable.woff2') format('woff2');
+  src: url('/fonts/Archivo-Variable.woff2') format('woff2'), url('https://fonts.gstatic.com/s/archivo/v25/k3kQo8UDI-1M0wlSfdnoLmvDIaI.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Archivo';
@@ -16,7 +16,7 @@
   font-weight: 100 900;
   font-stretch: 62% 125%;
   font-display: swap;
-  src: url('/fonts/Archivo-Italic-Variable.woff2') format('woff2');
+  src: url('/fonts/Archivo-Italic-Variable.woff2') format('woff2'), url('https://fonts.gstatic.com/s/archivo/v25/k3kSo8UDI-1M0wlSfdzYLGHEA6CF8Q.woff2') format('woff2');
 }
 
 :root {
@@ -133,15 +133,16 @@ svg { display: block; }
   background: linear-gradient(180deg, rgba(8,8,10,0) 0%, rgba(8,8,10,0.92) 28%, rgba(8,8,10,0.97) 100%);
   padding-top: 22px; padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
 }
-.controls-inner { display: grid; grid-template-columns: 1fr auto; gap: 14px 24px; align-items: center; }
-.controls .readouts { display: flex; gap: 22px; align-items: baseline; flex-wrap: wrap; grid-column: 1 / -1; }
+.controls-inner { display: grid; gap: 10px; }
+.controls .readouts { display: flex; gap: 22px; align-items: baseline; flex-wrap: wrap; }
+.controls-row { display: flex; gap: 14px 20px; align-items: center; flex-wrap: wrap; }
+.controls-row .slider { flex: 1 1 200px; min-width: 160px; }
 .readout { display: flex; align-items: baseline; gap: 8px; }
 .readout .v { font-size: clamp(22px, 2.4vw, 30px); line-height: 1; }
 .readout .u { font-size: 13px; color: var(--fg-3); }
 @media (max-width: 560px) {
   .controls { padding-top: 14px; }
-  .controls-inner { grid-template-columns: 1fr auto; gap: 6px 16px; }
-  .controls .readouts { gap: 16px; }
+  .controls .readouts { gap: 14px; }
   .readout .v { font-size: 22px; }
   .controls .btn { min-height: 44px; padding: 0 18px; }
 }

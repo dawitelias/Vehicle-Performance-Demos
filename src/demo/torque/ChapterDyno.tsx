@@ -53,6 +53,7 @@ export function ChapterDyno() {
       </div>
 
       <ThrottleBar
+        sliderId="rpm-dyno"
         rpm={rev.rpm}
         minRpm={1000}
         maxRpm={Z_ENGINE.limiterRpm}
