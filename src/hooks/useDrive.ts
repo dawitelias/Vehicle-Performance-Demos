@@ -5,9 +5,10 @@ import type { CurveMode } from '../sim/engine'
 import { mphFromMps } from '../sim/units'
 
 /**
- * A car you drive in real time: hold the throttle, tap the paddles. Fixed
- * 5 ms physics steps inside each animation frame. Reports shift and limiter
- * events for sound and haptics.
+ * A car you drive in real time: hold the throttle, hold the brake, tap to
+ * shift. Fixed 5 ms physics steps inside each animation frame. With both
+ * pedals released the engine brakes the car down to idle speed in the current
+ * gear; below that the clutch is treated as pressed and the car coasts.
  */
 export interface DriveEvents {
   onShift?: (gear: number) => void
@@ -15,27 +16,45 @@ export interface DriveEvents {
   onLaunch?: () => void
 }
 
+export interface DriveOptions {
+  curveMode?: CurveMode
+  autoShift?: boolean
+  startGear?: number
+  startSpeedMps?: number
+}
+
 export interface Drive {
   state: RunState
   mph: number
+  /** longitudinal acceleration in g (negative when slowing) */
+  g: number
   holding: boolean
+  braking: boolean
   hold: () => void
   release: () => void
+  brake: () => void
+  releaseBrake: () => void
   shiftUp: () => void
   shiftDown: () => void
   reset: () => void
-  /** best 0–60 seen since the last reset, s */
+  /** 0–60 mph time of the current run, s */
   zeroToSixty: number | null
 }
 
 const DT = 0.005
 
-export function useDrive(vehicle: Vehicle, opts: { curveMode?: CurveMode; autoShift?: boolean }, events: DriveEvents = {}): Drive {
-  const run = useMemo(() => createRun(vehicle, { dt: DT, dyno: opts.curveMode ?? 'rated', shiftStrategy: opts.autoShift ? 'auto' : 'hold', shiftRpm: 'optimal' }), [vehicle, opts.curveMode, opts.autoShift])
+export function useDrive(vehicle: Vehicle, opts: DriveOptions, events: DriveEvents = {}): Drive {
+  const { curveMode = 'rated', autoShift = false, startGear = 1, startSpeedMps = 0 } = opts
+  const run = useMemo(
+    () => createRun(vehicle, { dt: DT, dyno: curveMode, shiftStrategy: autoShift ? 'auto' : 'hold', shiftRpm: 'optimal', startGear, startSpeedMps }),
+    [vehicle, curveMode, autoShift, startGear, startSpeedMps],
+  )
   const [state, setState] = useState<RunState>(() => ({ ...run.state }))
   const [holding, setHolding] = useState(false)
+  const [braking, setBraking] = useState(false)
   const [zeroToSixty, setZeroToSixty] = useState<number | null>(null)
   const holdRef = useRef(false)
+  const brakeRef = useRef(false)
   const pendingUp = useRef(false)
   const pendingDown = useRef(false)
   const raf = useRef(0)
@@ -65,7 +84,7 @@ export function useDrive(vehicle: Vehicle, opts: { curveMode?: CurveMode; autoSh
           launchT.current = s.t
           ev.current.onLaunch?.()
         }
-        run.step(DT, { throttle: thr, shiftUp: pendingUp.current, shiftDown: pendingDown.current })
+        run.step(DT, { throttle: thr, brake: brakeRef.current ? 1 : 0, shiftUp: pendingUp.current, shiftDown: pendingDown.current })
         pendingUp.current = false
         pendingDown.current = false
         if (s.gear !== lastGear.current) {
@@ -75,13 +94,13 @@ export function useDrive(vehicle: Vehicle, opts: { curveMode?: CurveMode; autoSh
         if (s.onLimiter && !wasLimiter.current) ev.current.onLimiter?.()
         wasLimiter.current = s.onLimiter
         if (launchT.current !== null && mphFromMps(s.v) >= 60) {
-          setZeroToSixty((z) => z ?? s.t - launchT.current!)
+          const t0 = launchT.current
+          setZeroToSixty((z) => z ?? s.t - t0)
         }
       }
       setState({ ...run.state })
       const s = run.state
-      const idle = !holdRef.current && s.v < 0.05 && !s.shifting
-      if (idle) {
+      if (!holdRef.current && !s.shifting && s.v < 0.05) {
         stop()
         return
       }
@@ -106,6 +125,15 @@ export function useDrive(vehicle: Vehicle, opts: { curveMode?: CurveMode; autoSh
     setHolding(false)
     start()
   }, [start])
+  const brake = useCallback(() => {
+    brakeRef.current = true
+    setBraking(true)
+    start()
+  }, [start])
+  const releaseBrake = useCallback(() => {
+    brakeRef.current = false
+    setBraking(false)
+  }, [])
   const shiftUp = useCallback(() => {
     pendingUp.current = true
     start()
@@ -118,7 +146,9 @@ export function useDrive(vehicle: Vehicle, opts: { curveMode?: CurveMode; autoSh
     stop()
     run.reset()
     holdRef.current = false
+    brakeRef.current = false
     setHolding(false)
+    setBraking(false)
     launchT.current = null
     lastGear.current = run.state.gear
     wasLimiter.current = false
@@ -131,5 +161,5 @@ export function useDrive(vehicle: Vehicle, opts: { curveMode?: CurveMode; autoSh
   }, [reset])
   useEffect(() => () => cancelAnimationFrame(raf.current), [])
 
-  return { state, mph: mphFromMps(state.v), holding, hold, release, shiftUp, shiftDown, reset, zeroToSixty }
+  return { state, mph: mphFromMps(state.v), g: state.a / 9.80665, holding, braking, hold, release, brake, releaseBrake, shiftUp, shiftDown, reset, zeroToSixty }
 }

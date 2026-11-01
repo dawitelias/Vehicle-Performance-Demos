@@ -125,6 +125,8 @@ export interface RunInputs {
   shiftDown?: boolean
   /** Clutch pedal 0 (engaged) .. 1 (fully depressed). > 0.5 opens the clutch (engine free-revs). */
   clutch?: number
+  /** Brake pedal 0..1. Full braking decelerates at about 1 g on these tyres. */
+  brake?: number
 }
 
 export interface Run {
@@ -380,6 +382,14 @@ export function createRun(vehicle: Vehicle, opts: SimOptions = {}): Run {
         a = tractionLimited ? aTrac : aEng
         fTire = tractionLimited ? -fTrac : fEng
       }
+    }
+
+    // 4b. Brakes: a deceleration on top of whatever the engine is doing, never past a stop
+    const brake = clamp(inputs.brake ?? 0, 0, 1)
+    if (brake > 0 && s.v > 0) {
+      const decel = brake * mu * 0.8 * G
+      a -= decel
+      fTire -= decel * mass
     }
 
     // 5. Integrate (semi-implicit Euler), no reversing

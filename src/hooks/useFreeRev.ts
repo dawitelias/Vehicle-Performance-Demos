@@ -15,6 +15,7 @@ export interface FreeRevState {
   throttle: number
   tq: number
   hp: number
+  fullTq: number
   boost: number
   onLimiter: boolean
 }
@@ -28,12 +29,12 @@ export interface FreeRev extends FreeRevState {
 
 const EFFECTIVE_INERTIA = 2.0 // kg·m²
 const FRICTION_NM_PER_RPM = 0.04
-const MIN_RPM = 1000
 
 export function useFreeRev(engine: Engine, curveMode: CurveMode = 'rated', initialRpm = 3200): FreeRev {
-  const [state, setState] = useState<FreeRevState>(() => snap(engine, curveMode, initialRpm, 0, 0))
+  const [state, setState] = useState<FreeRevState>(() => snap(engine, curveMode, engine.idleRpm, 0, 0))
   const [holding, setHolding] = useState(false)
-  const rpmRef = useRef(initialRpm)
+  const rpmRef = useRef(engine.idleRpm)
+  void initialRpm
   const holdRef = useRef(false)
   const boostRef = useRef(createBoostState(0))
   const rafRef = useRef(0)
@@ -52,11 +53,11 @@ export function useFreeRev(engine: Engine, curveMode: CurveMode = 'rated', initi
       const alpha = (nmFromLbft(tqNet) - friction) / EFFECTIVE_INERTIA
       let w = radPerSecFromRpm(rpm) + alpha * dt
       let next = rpmFromRadPerSec(w)
-      if (next < MIN_RPM) next = MIN_RPM
+      if (next < engine.idleRpm) next = engine.idleRpm
       if (next > engine.limiterRpm + 60) next = engine.limiterRpm + 60
       rpmRef.current = next
       setState(snap(engine, curveMode, next, thr, boostRef.current.boost))
-      const settled = !holdRef.current && next <= MIN_RPM + 0.5
+      const settled = !holdRef.current && next <= engine.idleRpm + 0.5
       if (settled) {
         activeRef.current = false
         rafRef.current = 0
@@ -88,7 +89,7 @@ export function useFreeRev(engine: Engine, curveMode: CurveMode = 'rated', initi
 
   const setRpm = useCallback(
     (rpm: number) => {
-      rpmRef.current = Math.max(MIN_RPM, Math.min(engine.limiterRpm, rpm))
+      rpmRef.current = Math.max(engine.idleRpm, Math.min(engine.limiterRpm, rpm))
       boostRef.current.boost = 1
       setState(snap(engine, curveMode, rpmRef.current, holdRef.current ? 1 : 0, 1))
     },
@@ -100,8 +101,14 @@ export function useFreeRev(engine: Engine, curveMode: CurveMode = 'rated', initi
   return { ...state, hold, release, setRpm, holding }
 }
 
+/**
+ * `tq` and `hp` are what the engine is producing right now: the full-throttle
+ * curve scaled by turbo boost when the throttle is open, and engine braking
+ * (negative) when it is closed. `fullTq` is the curve value at this rpm.
+ */
 function snap(engine: Engine, curveMode: CurveMode, rpm: number, throttle: number, boost: number): FreeRevState {
   const curve = resolveCurve(engine, curveMode)
-  const tq = torqueAt(curve, rpm)
-  return { rpm, throttle, tq, hp: hpFromTorqueRpm(tq, rpm), boost, onLimiter: rpm >= engine.limiterRpm - 100 }
+  const fullTq = torqueAt(curve, rpm)
+  const tq = engineTorque(engine, rpm, throttle, { curveMode, boost: { boost } })
+  return { rpm, throttle, tq, hp: hpFromTorqueRpm(tq, rpm), fullTq, boost, onLimiter: throttle > 0 && rpm >= engine.limiterRpm - 100 }
 }

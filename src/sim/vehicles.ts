@@ -119,6 +119,7 @@ export const STREET_SUMMER_TIRE_MU = 1.25
  * turbo spool shape, not measured.
  */
 export const Z_RATED_CURVE: TorqueCurve = [
+  { rpm: 700, lbft: 150 }, // idle; off-boost estimate
   { rpm: 1000, lbft: 215 },
   { rpm: 1250, lbft: 250 },
   { rpm: 1500, lbft: 300 },
@@ -156,6 +157,7 @@ export const Z_RATED_CURVE: TorqueCurve = [
  * The top end is left at the rated values (the rating is power-limited there).
  */
 export const Z_DYNO_CURVE: TorqueCurve = [
+  { rpm: 700, lbft: 150 }, // idle; off-boost estimate
   { rpm: 1000, lbft: 215 },
   { rpm: 1250, lbft: 258 },
   { rpm: 1500, lbft: 318 },

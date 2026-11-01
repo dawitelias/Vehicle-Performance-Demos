@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useDrive } from '../../hooks/useDrive'
 import { nissanZ, Z_ENGINE } from '../../sim/vehicles'
 import { resolveCurve, type CurveMode } from '../../sim/engine'
 import { optimalShiftPoints, overallRatios } from '../../sim/drivetrain'
-import { createEngineSound, type EngineSound } from '../../audio/engineSound'
 import { createHaptics } from '../../haptics/haptics'
 import { ZContour } from '../../ui/ZContour'
 import { ZScene, hasWebGL } from '../../ui/ZScene'
@@ -17,10 +16,8 @@ const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
 export function ChapterDrive() {
   const [curveMode, setCurveMode] = useState<CurveMode>('rated')
   const [autoShift, setAutoShift] = useState(false)
-  const [soundOn, setSoundOn] = useState(false)
   const [webgl] = useState(() => hasWebGL())
   const haptics = useMemo(() => createHaptics(), [])
-  const soundRef = useRef<EngineSound | null>(null)
 
   const drive = useDrive(
     nissanZ,
@@ -33,49 +30,33 @@ export function ChapterDrive() {
   )
   const s = drive.state
   const ratios = overallRatios(nissanZ)
-  const wheelTq = Math.max(0, s.engineTorqueLbft) * ratios[s.gear - 1] * 0.92
+  const wheelTq = s.engineTorqueLbft * ratios[s.gear - 1] * 0.92
   const shiftPoints = useMemo(() => optimalShiftPoints(nissanZ, curveMode), [curveMode])
   const curve = resolveCurve(Z_ENGINE, curveMode)
-
-  // sound follows the engine every frame
-  useEffect(() => {
-    soundRef.current?.set({ rpm: s.rpm, throttle: s.throttle, boost: s.boost })
-  }, [s.rpm, s.throttle, s.boost])
-  useEffect(() => () => soundRef.current?.stop(), [])
-
-  const toggleSound = useCallback(async () => {
-    if (soundOn) {
-      soundRef.current?.stop()
-      soundRef.current = null
-      setSoundOn(false)
-      return
-    }
-    const snd = createEngineSound({ idleRpm: Z_ENGINE.idleRpm, limiterRpm: Z_ENGINE.limiterRpm })
-    soundRef.current = snd
-    await snd.start()
-    snd.set({ rpm: s.rpm, throttle: s.throttle, boost: s.boost })
-    setSoundOn(true)
-  }, [soundOn, s.rpm, s.throttle, s.boost])
-
   const prime = useCallback(() => haptics.prime(), [haptics])
+  const wheelAngle = s.x / nissanZ.chassis.tireRadiusM
 
   return (
     <section className="chapter" id="drive" onPointerDownCapture={prime}>
       <div className="wrap chapter-head">
-        <h2 className="display display-l">Drive it.</h2>
-        <p className="lede measure">Everything above, in one car. Hold the throttle. Shift when you like, or let it shift for you.</p>
+        <h2 className="display display-l">Drive the simulated Z</h2>
+        <p className="lede measure">Everything on this page comes from the same model, and here you can drive it from a standstill.</p>
         <p className="body measure">
-          With a flat torque curve the right shift point is the limiter, in every gear. Shift early and you land in a gear with less push. Watch the torque at the wheels when you do.
+          Hold the throttle to accelerate and use the brake to stop. You can shift yourself or let the car shift at the best point, which on this engine is the rev limiter in every gear. Try shifting early, at 4,000 rpm, and watch what happens to the torque at the wheels in the next gear.
         </p>
       </div>
 
       <div className="wrap drive-stage">
         <div className="drive-car">
-          {webgl ? <ZScene view="side" autoRotate={false} wheelAngle={s.x / 0.327} className="drive-scene" fallback={<ZContour wheelAngle={s.x / 0.327} className="drive-car-svg" />} /> : <ZContour wheelAngle={s.x / 0.327} className="drive-car-svg" />}
+          {webgl ? (
+            <ZScene view="side" autoRotate={false} wheelAngle={wheelAngle} className="drive-scene" fallback={<ZContour wheelAngle={wheelAngle} className="drive-car-svg" />} />
+          ) : (
+            <ZContour wheelAngle={wheelAngle} className="drive-car-svg" />
+          )}
         </div>
         <div className="drive-instruments">
           <RingTach rpm={s.rpm} redlineRpm={Z_ENGINE.redlineRpm} onLimiter={s.onLimiter} className="drive-ring" />
-          <CurveChart curve={curve} ghost={curveMode === 'dyno' ? Z_ENGINE.curve : undefined} rpm={s.rpm} maxRpm={Z_ENGINE.limiterRpm} maxValue={curveMode === 'dyno' ? 450 : 450} className="drive-chart" />
+          <CurveChart curve={curve} ghost={curveMode === 'dyno' ? Z_ENGINE.curve : undefined} rpm={s.rpm} throttle={s.throttle} maxRpm={Z_ENGINE.limiterRpm} className="drive-chart" />
         </div>
       </div>
 
@@ -87,31 +68,22 @@ export function ChapterDrive() {
               Nissan's rating
             </button>
             <button type="button" role="radio" aria-checked={curveMode === 'dyno'} className={`seg-btn ${curveMode === 'dyno' ? 'is-on' : ''}`} onClick={() => setCurveMode('dyno')}>
-              As measured on a dyno
+              Measured on a dyno
             </button>
           </div>
-          <span className="small">Stock cars put 360 to 383 lb-ft to the wheels on a chassis dyno, so the factory 350 is conservative.</span>
+          <span className="small">Stock cars put 360 to 383 lb-ft to the wheels on a chassis dyno, so the factory figure of 350 at the crank is conservative.</span>
         </div>
         <div className="drive-opt">
           <span className="small">Shifting</span>
           <div className="seg" role="radiogroup" aria-label="Shifting">
             <button type="button" role="radio" aria-checked={!autoShift} className={`seg-btn ${!autoShift ? 'is-on' : ''}`} onClick={() => setAutoShift(false)}>
-              Paddles
+              I'll shift
             </button>
             <button type="button" role="radio" aria-checked={autoShift} className={`seg-btn ${autoShift ? 'is-on' : ''}`} onClick={() => setAutoShift(true)}>
               Shift for me
             </button>
           </div>
-          <span className="small">Best points: {shiftPoints.slice(0, 5).map((p) => fmt(p)).join(', ')} rpm.</span>
-        </div>
-        <div className="drive-opt">
-          <span className="small">Sound</span>
-          <div className="seg">
-            <button type="button" className={`seg-btn ${soundOn ? 'is-on' : ''}`} onClick={toggleSound} aria-pressed={soundOn}>
-              {soundOn ? 'Engine sound on' : 'Engine sound off'}
-            </button>
-          </div>
-          <span className="small">Synthesised V6 with turbo hiss. {haptics.supported === 'none' ? 'No haptics on this device.' : 'Haptics on shifts and the limiter.'}</span>
+          <span className="small">The car shifts at {fmt(shiftPoints[0])} rpm in every gear.</span>
         </div>
       </div>
 
@@ -121,8 +93,9 @@ export function ChapterDrive() {
           { value: fmt(s.rpm), unit: 'rpm' },
           { value: s.gear.toString(), unit: s.shifting ? 'shifting' : 'gear' },
           { value: fmt(wheelTq), unit: 'lb-ft at the wheels' },
-          { value: drive.zeroToSixty !== null ? drive.zeroToSixty.toFixed(2) : '', unit: drive.zeroToSixty !== null ? 's to 60' : '' },
-        ].filter((r) => r.value !== '')}
+          { value: drive.g.toFixed(2), unit: 'g' },
+          ...(drive.zeroToSixty !== null ? [{ value: drive.zeroToSixty.toFixed(1), unit: 's to 60' }] : []),
+        ]}
       >
         <div className="row">
           <button type="button" className="btn btn-ghost" onClick={drive.shiftDown} aria-label="Shift down" disabled={autoShift}>
@@ -135,7 +108,8 @@ export function ChapterDrive() {
         <button type="button" className="btn btn-ghost" onClick={drive.reset}>
           Reset
         </button>
-        <HoldButton holding={drive.holding} onHold={drive.hold} onRelease={drive.release} label="Hold to drive" className="drive-hold" />
+        <HoldButton holding={drive.braking} onHold={drive.brake} onRelease={drive.releaseBrake} label="Brake" className="btn-ghost drive-brake" />
+        <HoldButton holding={drive.holding} onHold={drive.hold} onRelease={drive.release} label="Throttle" className="drive-hold" />
       </ControlBar>
     </section>
   )

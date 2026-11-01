@@ -1,77 +1,69 @@
 import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
-import { Html, OrbitControls } from '@react-three/drei'
-import { EffectComposer, Bloom, ChromaticAberration, Noise, Vignette } from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
+import { ContactShadows, Environment, Lightformer, OrbitControls, PerformanceMonitor } from '@react-three/drei'
+import { EffectComposer, Bloom, ChromaticAberration, Noise, ToneMapping, Vignette } from '@react-three/postprocessing'
+import { BlendFunction, ToneMappingMode } from 'postprocessing'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
-import {
-  Box3,
-  BufferGeometry,
-  Color,
-  EdgesGeometry,
-  Group,
-  LineBasicMaterial,
-  LineSegments,
-  Mesh,
-  MeshStandardMaterial,
-  Vector2,
-  Vector3,
-  type Object3D,
-} from 'three'
+import { Box3, BufferAttribute, BufferGeometry, Color, Group, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Vector2, Vector3, type Object3D } from 'three'
 import { resolveModelUrl } from './modelUrl'
 
 /**
- * The Z as a real model, lit the way the rest of the site is drawn: a near-black
- * body whose silhouette glows Ikazuchi yellow (a fresnel rim written into the
- * standard material), crease edges as thin yellow lines pushed above white so
- * bloom catches them, then bloom, chromatic aberration, film grain and a
- * vignette as GPU post-processing passes.
+ * The 2020 Z Proto model rendered as a studio shot: the model's own PBR
+ * materials, the paint upgraded to a clear-coated Ikazuchi yellow, a
+ * light-box environment for reflections, a contact shadow to ground it, and a
+ * restrained post-processing stack (bloom on highlights only, AgX tone
+ * mapping, faint chromatic aberration, film grain, vignette).
  *
- * Wheels are found by name, split into four by position, spin with `wheelAngle`
- * and slide outward with `exploded` (0..1) for the exploded hero.
+ * The merged wheel mesh is split into four by position so each wheel turns on
+ * its own axle with `wheelAngle` (radians, positive = rolling forward).
  */
 export interface ZSceneProps {
   wheelAngle?: number
-  exploded?: number
   view?: 'hero' | 'side'
   autoRotate?: boolean
-  labels?: { text: string; at: [number, number, number]; color?: string }[]
   className?: string
   url?: string
-}
-
-const YELLOW = new Color('#f2c230')
-const SCALE = 100 // the Sketchfab file is in 1/100 units; this brings a 4.38 m car to 4.38 units
-
-function patchRim(mat: MeshStandardMaterial, rim: { value: number }) {
-  mat.onBeforeCompile = (shader) => {
-    shader.uniforms.uRim = rim
-    shader.uniforms.uRimColor = { value: YELLOW }
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform float uRim;\nuniform vec3 uRimColor;')
-      .replace(
-        '#include <emissivemap_fragment>',
-        `#include <emissivemap_fragment>
-        float fr = pow(1.0 - saturate(dot(normalize(vNormal), normalize(vViewPosition))), 3.0);
-        totalEmissiveRadiance += uRimColor * fr * uRim;`,
-      )
-  }
-  mat.customProgramCacheKey = () => 'rim'
 }
 
 export interface WheelGroup {
   group: Group
   center: Vector3
-  side: 1 | -1
 }
 
-function splitWheels(mesh: Mesh): Mesh[] {
-  // Split one merged wheel mesh into four by the sign of x and z of each triangle's centroid.
-  const geo = mesh.geometry
+const SCALE = 100 // the Sketchfab file is authored in 1/100 units
+
+/** Meshopt stores attributes as normalised integers; convert to floats before baking transforms so nothing is clamped or rounded. */
+function dequantize(src: BufferGeometry): BufferGeometry {
+  const geo = src.clone()
+  for (const name of Object.keys(geo.attributes)) {
+    const a = geo.attributes[name] as BufferAttribute
+    if (a.array instanceof Float32Array && !a.normalized) continue
+    const out = new Float32Array(a.count * a.itemSize)
+    for (let i = 0; i < a.count; i++) for (let k = 0; k < a.itemSize; k++) out[i * a.itemSize + k] = a.getComponent(i, k)
+    geo.setAttribute(name, new BufferAttribute(out, a.itemSize))
+  }
+  return geo
+}
+
+function indexedCenter(geo: BufferGeometry): Vector3 {
+  const box = new Box3()
+  const v = new Vector3()
+  const pos = geo.attributes.position
+  const idx = geo.index
+  if (!idx) {
+    geo.computeBoundingBox()
+    return geo.boundingBox!.getCenter(new Vector3())
+  }
+  for (let i = 0; i < idx.count; i++) box.expandByPoint(v.fromBufferAttribute(pos, idx.getX(i)))
+  return box.getCenter(new Vector3())
+}
+
+/** Split one merged mesh holding four wheels into four meshes, by the sign of x and z of each triangle's centroid. */
+function splitFour(geo: BufferGeometry): BufferGeometry[] {
   const pos = geo.attributes.position
   const index = geo.index
-  if (!index) return [mesh]
+  if (!index) return [geo]
   const buckets: number[][] = [[], [], [], []]
   const a = new Vector3()
   const b = new Vector3()
@@ -83,9 +75,7 @@ function splitWheels(mesh: Mesh): Mesh[] {
     a.fromBufferAttribute(pos, i0)
     b.fromBufferAttribute(pos, i1)
     c.fromBufferAttribute(pos, i2)
-    const cx = (a.x + b.x + c.x) / 3
-    const cz = (a.z + b.z + c.z) / 3
-    const k = (cx >= 0 ? 1 : 0) + (cz >= 0 ? 2 : 0)
+    const k = ((a.x + b.x + c.x) / 3 >= 0 ? 1 : 0) + ((a.z + b.z + c.z) / 3 >= 0 ? 2 : 0)
     buckets[k].push(i0, i1, i2)
   }
   return buckets
@@ -94,93 +84,78 @@ function splitWheels(mesh: Mesh): Mesh[] {
       const g = new BufferGeometry()
       for (const name of Object.keys(geo.attributes)) g.setAttribute(name, geo.attributes[name])
       g.setIndex(bk)
-      g.computeBoundingBox()
-      const m = new Mesh(g, mesh.material)
-      m.position.copy(mesh.position)
-      m.quaternion.copy(mesh.quaternion)
-      m.scale.copy(mesh.scale)
-      return m
+      return g
     })
 }
 
-
-/** Builds the lit, edged, wheel-split Z from a loaded glTF scene. Shared by the live scene and the sprite renderer. */
-export function buildZ(sceneIn: Object3D, rim: { value: number }): { root: Group; wheels: WheelGroup[] } {
-    const gltf = { scene: sceneIn }
-
-    const root = new Group()
-    const scene = gltf.scene.clone(true)
-    scene.updateMatrixWorld(true)
-    const bodyMat = new MeshStandardMaterial({ color: new Color('#0a0a0b'), roughness: 0.6, metalness: 0.25 })
-    const glassMat = new MeshStandardMaterial({ color: new Color('#0a0a0c'), roughness: 0.2, metalness: 0.6, transparent: true, opacity: 0.55 })
-    const trimMat = new MeshStandardMaterial({ color: new Color('#141414'), roughness: 0.7, metalness: 0.2 })
-    for (const m of [bodyMat, glassMat, trimMat]) patchRim(m, rim)
-    const edgeMat = new LineBasicMaterial({ color: new Color(2.4, 1.75, 0.45), transparent: true, opacity: 0.45, toneMapped: false })
-    const wheels: WheelGroup[] = []
-    const meshes: Mesh[] = []
-    scene.traverse((o: Object3D) => {
-      if (o instanceof Mesh) meshes.push(o)
+function upgradeMaterial(name: string, m: Material): Material {
+  const std = m as MeshStandardMaterial
+  if (name.includes('paint')) {
+    return new MeshPhysicalMaterial({
+      color: new Color('#f2c230'),
+      metalness: 0.15,
+      roughness: 0.32,
+      clearcoat: 1,
+      clearcoatRoughness: 0.04,
+      envMapIntensity: 1.1,
     })
-    for (const m of meshes) {
-      const name = m.name.toLowerCase()
-      const world = m.matrixWorld.clone()
-      if (name.includes('wheel')) {
-        // bake the world transform, then split into four wheels
-        const g = m.geometry.clone().applyMatrix4(world)
-        const baked = new Mesh(g, trimMat)
-        for (const part of splitWheels(baked)) {
-          const center = indexedCenter(part.geometry)
-          part.geometry = part.geometry.toNonIndexed()
-          part.geometry.translate(-center.x, -center.y, -center.z)
-          part.geometry.computeBoundingBox()
-          part.material = trimMat
-          const grp = new Group()
-          grp.position.copy(center)
-          grp.add(part)
-          const edges = new LineSegments(new EdgesGeometry(part.geometry, 40), edgeMat)
-          grp.add(edges)
-          root.add(grp)
-          wheels.push({ group: grp, center, side: center.x >= 0 ? 1 : -1 })
-        }
-        continue
-      }
-      const g = m.geometry.clone().applyMatrix4(world)
-      const isGlass = name.includes('window')
-      const isPaint = name.includes('paint') || name.includes('coloured') || name.includes('light') || name.includes('base')
-      const mesh = new Mesh(g, isGlass ? glassMat : isPaint ? bodyMat : trimMat)
-      root.add(mesh)
-      if (isPaint || isGlass) root.add(new LineSegments(new EdgesGeometry(g, isGlass ? 50 : 32), edgeMat))
-    }
-    // normalise: scale to metres, sit on the ground, centre on x/z
-    root.scale.setScalar(SCALE)
-    root.updateMatrixWorld(true)
-    const box = new Box3().setFromObject(root)
-    const centre = box.getCenter(new Vector3())
-    root.position.set(-centre.x, -box.min.y, -centre.z)
-    return { root, wheels }
+  }
+  if (name.includes('window') && std.transparent) {
+    return new MeshPhysicalMaterial({ color: new Color('#05070a'), metalness: 0, roughness: 0.02, transparent: true, opacity: 0.55, envMapIntensity: 1.4, depthWrite: false })
+  }
+  const c = std.clone()
+  c.envMapIntensity = 1
+  return c
 }
 
-function indexedCenter(geo: BufferGeometry): Vector3 {
-  const box = new Box3()
-  const v = new Vector3()
-  const pos = geo.attributes.position
-  const idx = geo.index!
-  for (let i = 0; i < idx.count; i++) box.expandByPoint(v.fromBufferAttribute(pos, idx.getX(i)))
-  return box.getCenter(new Vector3())
-}
-
-function Model({ wheelAngle = 0, exploded = 0, url = '/models/z.glb' }: { wheelAngle?: number; exploded?: number; url?: string }) {
-  const gltf = useLoader(GLTFLoader, url, (loader) => loader.setMeshoptDecoder(MeshoptDecoder))
-  const rim = useMemo(() => ({ value: 0.45 }), [])
-  const { root, wheels } = useMemo(() => buildZ(gltf.scene, rim), [gltf, rim])
-
-  useFrame(() => {
-    for (const w of wheels) {
-      w.group.rotation.x = -wheelAngle
-      w.group.position.x = w.center.x + (w.side * 0.75 * exploded) / SCALE
-    }
+/** Builds the scene graph from a loaded glTF: baked transforms, upgraded paint and glass, four spinnable wheels, normalised to metres on the ground. */
+export function buildZ(sceneIn: Object3D): { root: Group; wheels: WheelGroup[]; length: number } {
+  const root = new Group()
+  const scene = sceneIn.clone(true)
+  scene.updateMatrixWorld(true)
+  const wheels: WheelGroup[] = []
+  const meshes: Mesh[] = []
+  scene.traverse((o) => {
+    if (o instanceof Mesh) meshes.push(o)
   })
+  for (const m of meshes) {
+    const name = m.name.toLowerCase()
+    const geo = dequantize(m.geometry).applyMatrix4(m.matrixWorld)
+    const mat = upgradeMaterial(name, Array.isArray(m.material) ? m.material[0] : m.material)
+    if (name.includes('wheel')) {
+      for (const part of splitFour(geo)) {
+        const center = indexedCenter(part)
+        const g = part.toNonIndexed()
+        g.translate(-center.x, -center.y, -center.z)
+        const grp = new Group()
+        grp.position.copy(center)
+        const mesh = new Mesh(g, mat)
+        mesh.castShadow = true
+        grp.add(mesh)
+        root.add(grp)
+        wheels.push({ group: grp, center })
+      }
+      continue
+    }
+    const mesh = new Mesh(geo, mat)
+    mesh.renderOrder = name.includes('window') ? 2 : 0
+    root.add(mesh)
+  }
+  root.scale.setScalar(SCALE)
+  root.updateMatrixWorld(true)
+  const box = new Box3().setFromObject(root)
+  const centre = box.getCenter(new Vector3())
+  root.position.set(-centre.x, -box.min.y, -centre.z)
+  root.updateMatrixWorld(true)
+  return { root, wheels, length: (box.max.z - box.min.z) }
+}
 
+function Model({ wheelAngle = 0, url }: { wheelAngle?: number; url: string }) {
+  const gltf = useLoader(GLTFLoader, url, (loader) => loader.setMeshoptDecoder(MeshoptDecoder))
+  const { root, wheels } = useMemo(() => buildZ(gltf.scene), [gltf])
+  useFrame(() => {
+    for (const w of wheels) w.group.rotation.x = wheelAngle
+  })
   return <primitive object={root} />
 }
 
@@ -189,24 +164,39 @@ function CameraRig({ view }: { view: 'hero' | 'side' }) {
   useLayoutEffect(() => {
     const aspect = size.width / Math.max(1, size.height)
     const cam = camera as unknown as { fov: number; updateProjectionMatrix: () => void }
-    cam.fov = aspect < 1.4 ? 36 : 24
+    cam.fov = aspect < 1.4 ? 34 : 26
     cam.updateProjectionMatrix()
-    const k = aspect < 1.4 ? 0.82 : 1
-    if (view === 'side') camera.position.set(-7.6 * k, 1.15, 0.6)
-    else camera.position.set(-5.2 * k, 1.7 * k, 5.6 * k)
-    camera.lookAt(0, 0.55, 0)
+    const k = aspect < 1.4 ? 0.92 : 0.82
+    if (view === 'side') camera.position.set(-8.2 * k, 0.85, 0.15)
+    else camera.position.set(-5.4 * k, 1.3 * k, 5.2 * k)
+    camera.lookAt(0, 0.6, 0)
   }, [camera, view, size.width, size.height])
   return null
 }
 
-function Effects() {
-  const offset = useMemo(() => new Vector2(0.0011, 0.0007), [])
+/** Car-studio lighting: a long overhead softbox and two side strips, rendered once into the environment map. */
+function Studio() {
   return (
-    <EffectComposer multisampling={0}>
-      <Bloom luminanceThreshold={1.0} luminanceSmoothing={0.15} intensity={1.0} mipmapBlur radius={0.65} />
-      <ChromaticAberration offset={offset} radialModulation modulationOffset={0.3} />
-      <Noise opacity={0.22} premultiply blendFunction={BlendFunction.SCREEN} />
-      <Vignette eskil={false} offset={0.28} darkness={0.85} />
+    <Environment resolution={512} frames={1} environmentIntensity={1.5}>
+      <Lightformer form="rect" intensity={2.4} color="#fff6e8" position={[0, 6, 0]} rotation-x={Math.PI / 2} scale={[4, 12, 1]} />
+      <Lightformer form="rect" intensity={2.2} color="#ffffff" position={[-6, 1.6, 0]} rotation-y={Math.PI / 2} scale={[14, 0.6, 1]} />
+      <Lightformer form="rect" intensity={1.2} color="#ffffff" position={[-6, 0.4, 0]} rotation-y={Math.PI / 2} scale={[14, 0.3, 1]} />
+      <Lightformer form="rect" intensity={1.6} color="#ffffff" position={[6, 1.6, 0]} rotation-y={-Math.PI / 2} scale={[14, 0.5, 1]} />
+      <Lightformer form="rect" intensity={0.9} color="#cfd8ff" position={[0, 2, 8]} scale={[10, 2, 1]} />
+      <Lightformer form="rect" intensity={0.6} color="#ffd9a0" position={[0, 2, -8]} rotation-y={Math.PI} scale={[10, 2, 1]} />
+    </Environment>
+  )
+}
+
+function Effects({ high }: { high: boolean }) {
+  const offset = useMemo(() => new Vector2(0.0006, 0.0004), [])
+  return (
+    <EffectComposer multisampling={high ? 4 : 0}>
+      <Bloom luminanceThreshold={0.9} luminanceSmoothing={0.1} intensity={0.55} mipmapBlur radius={0.6} />
+      <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+      <ChromaticAberration offset={offset} radialModulation modulationOffset={0.45} />
+      <Noise opacity={0.07} premultiply blendFunction={BlendFunction.SCREEN} />
+      <Vignette eskil={false} offset={0.3} darkness={0.6} />
     </EffectComposer>
   )
 }
@@ -230,9 +220,13 @@ export function hasWebGL(): boolean {
   }
 }
 
-export function ZScene({ wheelAngle = 0, exploded = 0, view = 'hero', autoRotate = true, labels, className, url, fallback }: ZSceneProps & { fallback: ReactNode }) {
+export function ZScene({ wheelAngle = 0, view = 'hero', autoRotate = true, className, url, fallback }: ZSceneProps & { fallback: ReactNode }) {
   const reduce = useMemo(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
   const [resolved, setResolved] = useState<string | null>(url ?? null)
+  const [visible, setVisible] = useState(true)
+  // Start at full quality; drop multisampling and pixel ratio if the device can't hold a steady frame rate.
+  const [high, setHigh] = useState(() => !new URLSearchParams(window.location.search).has('lowfx'))
+  const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (url) return
     let live = true
@@ -243,35 +237,34 @@ export function ZScene({ wheelAngle = 0, exploded = 0, view = 'hero', autoRotate
       live = false
     }
   }, [url])
-  const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    // keep the WebGL canvas from running while off screen
     const el = ref.current
     if (!el) return
-    const io = new IntersectionObserver(([e]) => el.classList.toggle('is-off', !e.isIntersecting))
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { rootMargin: '120px' })
     io.observe(el)
     return () => io.disconnect()
   }, [])
   return (
     <div ref={ref} className={`zscene ${className ?? ''}`}>
       <Boundary fallback={fallback}>
-        <Canvas dpr={[1, 1.5]} camera={{ fov: 24, near: 0.1, far: 100 }} gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }} frameloop={reduce ? 'demand' : 'always'} style={{ background: 'transparent' }}>
+        <Canvas
+          flat
+          shadows={false}
+          dpr={high ? [1, 2] : 1}
+          camera={{ fov: 26, near: 0.1, far: 100 }}
+          gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
+          frameloop={visible ? 'always' : 'never'}
+          style={{ background: 'transparent' }}
+        >
+          <PerformanceMonitor onDecline={() => setHigh(false)} flipflops={1} />
           <CameraRig view={view} />
-          <ambientLight intensity={0.12} color="#f1e6cf" />
-          <directionalLight position={[-6, 8, 4]} intensity={0.7} color="#fff1d6" />
-          <directionalLight position={[8, 3, -6]} intensity={0.6} color="#9bb6ff" />
+          <Studio />
           <Suspense fallback={null}>
-            {resolved && <Model wheelAngle={wheelAngle} exploded={exploded} url={resolved} />}
-            {labels?.map((l, i) => (
-              <Html key={l.text} position={l.at} center={false} distanceFactor={undefined} style={{ pointerEvents: 'none', opacity: Math.min(1, Math.max(0, (exploded - i * 0.25) / 0.35)), transition: 'opacity 120ms linear' }} zIndexRange={[2, 0]}>
-                <span className="zlabel" style={{ color: l.color ?? '#9ea87a', borderColor: l.color ?? '#9ea87a' }}>
-                  {l.text}
-                </span>
-              </Html>
-            ))}
+            {resolved && <Model wheelAngle={wheelAngle} url={resolved} />}
+            <ContactShadows position={[0, 0.001, 0]} opacity={0.75} scale={9} blur={2.4} far={1.6} resolution={512} frames={1} color="#000000" />
           </Suspense>
-          <Effects />
-          <OrbitControls enableZoom={false} enablePan={false} autoRotate={autoRotate && !reduce} autoRotateSpeed={0.5} minPolarAngle={1.15} maxPolarAngle={1.5} target={[0, 0.55, 0]} />
+          <Effects high={high} />
+          <OrbitControls enableZoom={false} enablePan={false} autoRotate={autoRotate && !reduce} autoRotateSpeed={0.35} minPolarAngle={1.2} maxPolarAngle={1.5} target={[0, 0.6, 0]} enableRotate={view === 'hero'} />
         </Canvas>
       </Boundary>
     </div>

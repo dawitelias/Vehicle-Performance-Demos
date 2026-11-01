@@ -26,8 +26,8 @@ describe('torque curve lookup', () => {
     expect(torqueAt(Z_RATED_CURVE, 6450)).toBeCloseTo(324.5, 9) // between 6400:328 and 6500:321
   })
   it('clamps at the ends', () => {
-    expect(torqueAt(Z_RATED_CURVE, 0)).toBe(215)
-    expect(torqueAt(Z_RATED_CURVE, 500)).toBe(215)
+    expect(torqueAt(Z_RATED_CURVE, 0)).toBe(150)
+    expect(torqueAt(Z_RATED_CURVE, 500)).toBe(150)
     expect(torqueAt(Z_RATED_CURVE, 9000)).toBe(288)
   })
 })

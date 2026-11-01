@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { zSprite } from '../ui/zSprite'
+import { zSprite, type ZSprite } from '../ui/zSprite'
 
-/** The side-on sprite of the real model as a data URL, or null until it exists. */
-export function useZSprite(): string | null {
-  const [href, setHref] = useState<string | null>(null)
+/** Side-on renders of the real model, or null until they exist (or if WebGL is unavailable). */
+export function useZSprite(): ZSprite | null {
+  const [href, setHref] = useState<ZSprite | null>(null)
   useEffect(() => {
     let live = true
     zSprite().then((d) => {

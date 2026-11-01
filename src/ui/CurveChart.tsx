@@ -18,11 +18,13 @@ export interface CurveChartProps {
   className?: string
   /** a second, dimmer curve for comparison (e.g. the dyno curve) */
   ghost?: TorqueCurve
+  /** 0..1. The curves are full-throttle values; with the throttle closed the markers dim, because the engine isn't making them. */
+  throttle?: number
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
 
-export const CurveChart = memo(function CurveChart({ curve, rpm, minRpm = 1000, maxRpm = 6800, maxValue = 450, crossover = true, className, ghost }: CurveChartProps) {
+export const CurveChart = memo(function CurveChart({ curve, rpm, minRpm = 1000, maxRpm = 6800, maxValue = 450, crossover = true, className, ghost, throttle = 1 }: CurveChartProps) {
   const ref = useRef<SVGSVGElement>(null)
   const [narrow, setNarrow] = useState(false)
   useEffect(() => {
@@ -128,10 +130,12 @@ export const CurveChart = memo(function CurveChart({ curve, rpm, minRpm = 1000, 
         horsepower
       </text>
       <line x1={px} x2={px} y1={T} y2={B} stroke="#9ea87a" strokeWidth={1} opacity={0.7} />
-      <circle cx={px} cy={y(tv)} r={3} fill="#fff4dc" filter="url(#fx-hot)" />
-      <circle cx={px} cy={y(hv)} r={3} fill="#fff4dc" filter="url(#fx-hot)" />
-      <Label py={yT} text={`${fmt(tv)} lb-ft`} color="#f2c230" />
-      <Label py={yH} text={`${fmt(hv)} hp`} color="#f1e6cf" />
+      <g opacity={throttle > 0.05 ? 1 : 0.35}>
+        <circle cx={px} cy={y(tv)} r={3} fill="#fff4dc" filter="url(#fx-hot)" />
+        <circle cx={px} cy={y(hv)} r={3} fill="#fff4dc" filter="url(#fx-hot)" />
+        <Label py={yT} text={`${fmt(tv)} lb-ft`} color="#f2c230" />
+        <Label py={yH} text={`${fmt(hv)} hp`} color="#f1e6cf" />
+      </g>
     </svg>
   )
 })
